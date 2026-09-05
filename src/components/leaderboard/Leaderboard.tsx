@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { Pagination } from './Pagination'
+import { DEMO_LISTINGS } from './demoListings'
 
-type CategoryId =
+export type CategoryId =
   | 'ai-agents'
   | 'seo-visibility'
   | 'marketing-advertising'
@@ -57,80 +59,6 @@ type Listing = {
 
 type TimeFilter = 'all-time' | 'today'
 
-// Fictional demo data for UI purposes only — not real ClickBid rankings.
-const DEMO_LISTINGS: Listing[] = [
-  {
-    rank: 1,
-    name: 'Linear',
-    domain: 'linear.app',
-    categoryId: 'developer-tools',
-    amount: 12_500,
-  },
-  {
-    rank: 2,
-    name: 'Vercel',
-    domain: 'vercel.com',
-    categoryId: 'developer-tools',
-    amount: 9_800,
-  },
-  {
-    rank: 3,
-    name: 'Notion',
-    domain: 'notion.so',
-    categoryId: 'other',
-    amount: 7_500,
-  },
-  {
-    rank: 4,
-    name: 'Cursor',
-    domain: 'cursor.com',
-    categoryId: 'developer-tools',
-    amount: 6_200,
-  },
-  {
-    rank: 5,
-    name: 'Perplexity',
-    domain: 'perplexity.ai',
-    categoryId: 'ai-agents',
-    amount: 5_400,
-  },
-  {
-    rank: 6,
-    name: 'Framer',
-    domain: 'framer.com',
-    categoryId: 'design-creative',
-    amount: 4_900,
-  },
-  {
-    rank: 7,
-    name: 'Ramp',
-    domain: 'ramp.com',
-    categoryId: 'finance-business',
-    amount: 4_300,
-  },
-  {
-    rank: 8,
-    name: 'Webflow',
-    domain: 'webflow.com',
-    categoryId: 'design-creative',
-    amount: 3_850,
-  },
-  {
-    rank: 9,
-    name: 'Loom',
-    domain: 'loom.com',
-    categoryId: 'social-creator',
-    amount: 3_400,
-  },
-  {
-    rank: 10,
-    name: 'HubSpot',
-    domain: 'hubspot.com',
-    categoryId: 'marketing-advertising',
-    amount: 2_950,
-  },
-]
-
 /**
  * Leaderboard
  *
@@ -141,6 +69,10 @@ const DEMO_LISTINGS: Listing[] = [
 export function Leaderboard() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all-time')
   const [activeFilter, setActiveFilter] = useState<FilterId>('all')
+  const filteredListings =
+    activeFilter === 'all'
+      ? DEMO_LISTINGS
+      : DEMO_LISTINGS.filter((listing) => listing.categoryId === activeFilter)
 
   return (
     <div className="flex min-w-0 flex-col">
@@ -190,19 +122,16 @@ export function Leaderboard() {
       </div>
 
       <div className="mt-6 flex flex-col gap-3">
-        {DEMO_LISTINGS.map((listing) => (
-          <LeaderboardRow key={listing.rank} listing={listing} />
-        ))}
+        {filteredListings.length === 0 ? (
+          <EmptyState />
+        ) : (
+          filteredListings.map((listing) => (
+            <LeaderboardRow key={listing.rank} listing={listing} />
+          ))
+        )}
       </div>
 
-      <div className="mt-8 flex justify-center">
-        <button
-          type="button"
-          className="rounded-xl border border-[#E7E1F2] bg-[#FCFBFA] px-5 py-2.5 text-sm font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#F5F1FB]"
-        >
-          Load more
-        </button>
-      </div>
+      {filteredListings.length > 9 && <Pagination />}
     </div>
   )
 }
@@ -252,6 +181,25 @@ const RANK_STYLES = {
     glow: '',
   },
 } as const
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] px-6 py-14 text-center">
+      <h3 className="text-base font-semibold text-[#14102B]">
+        No listings yet
+      </h3>
+      <p className="mt-1.5 text-sm text-[#5B5468]">
+        Be the first to claim a rank in this category.
+      </p>
+      <button
+        type="button"
+        className="mt-5 rounded-xl bg-[#4B2AAD] px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#3A2288]"
+      >
+        Claim Rank
+      </button>
+    </div>
+  )
+}
 
 function LeaderboardRow({ listing }: { listing: Listing }) {
   const podiumStyle =

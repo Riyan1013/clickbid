@@ -1,6 +1,7 @@
 import { PageCanvas } from '@/components/layout/PageCanvas'
 import { AppShell } from '@/components/layout/AppShell'
 import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
 import { Hero } from '@/components/featured/Hero'
 import { ClaimRank } from '@/components/featured/ClaimRank'
 import { Leaderboard } from '@/components/leaderboard/Leaderboard'
@@ -11,6 +12,7 @@ export default function HomePage() {
     <PageCanvas>
       <AppShell>
         <Header />
+
         <Hero />
         <ClaimRank />
 
@@ -21,11 +23,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/*
-          Footer is intentionally not implemented yet — added in a
-          later step.
-        */}
-        <div className="min-h-[60px]" />
+        <Footer />
       </AppShell>
     </PageCanvas>
   )
