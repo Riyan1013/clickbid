@@ -1,10 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-
-const TOTAL_ITEMS = 100
-const ITEMS_PER_PAGE = 10
-const TOTAL_PAGES = Math.ceil(TOTAL_ITEMS / ITEMS_PER_PAGE)
+export const ITEMS_PER_PAGE = 10
 
 type PageEntry = number | 'ellipsis'
 
@@ -18,12 +14,19 @@ type PageEntry = number | 'ellipsis'
  * pages (with an ellipsis for the gap), a Next arrow, and a small
  * "range of total" summary line beneath it.
  */
-export function Pagination() {
-  const [currentPage, setCurrentPage] = useState(1)
-
+export function Pagination({
+  currentPage,
+  totalItems,
+  onPageChange,
+}: {
+  currentPage: number
+  totalItems: number
+  onPageChange: (page: number) => void
+}) {
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE)
   const rangeStart = (currentPage - 1) * ITEMS_PER_PAGE + 1
-  const rangeEnd = Math.min(currentPage * ITEMS_PER_PAGE, TOTAL_ITEMS)
-  const pageNumbers = getPageNumbers(currentPage, TOTAL_PAGES)
+  const rangeEnd = Math.min(currentPage * ITEMS_PER_PAGE, totalItems)
+  const pageNumbers = getPageNumbers(currentPage, totalPages)
 
   return (
     <div className="mt-8 flex flex-col items-center gap-3">
@@ -34,7 +37,7 @@ export function Pagination() {
         <PageArrowButton
           direction="prev"
           disabled={currentPage === 1}
-          onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         />
 
         {pageNumbers.map((page, index) =>
@@ -49,7 +52,7 @@ export function Pagination() {
             <button
               key={page}
               type="button"
-              onClick={() => setCurrentPage(page)}
+              onClick={() => onPageChange(page)}
               aria-current={page === currentPage ? 'page' : undefined}
               className={[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-medium tabular-nums transition-colors duration-150',
@@ -65,15 +68,13 @@ export function Pagination() {
 
         <PageArrowButton
           direction="next"
-          disabled={currentPage === TOTAL_PAGES}
-          onClick={() =>
-            setCurrentPage((page) => Math.min(TOTAL_PAGES, page + 1))
-          }
+          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         />
       </nav>
 
       <p className="text-xs text-[#9B94A8]">
-        {rangeStart}–{rangeEnd} of {TOTAL_ITEMS}
+        {rangeStart}–{rangeEnd} of {totalItems}
       </p>
     </div>
   )
