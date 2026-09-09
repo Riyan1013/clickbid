@@ -255,15 +255,31 @@ function EmptyState() {
   )
 }
 
-function LeaderboardRow({ listing }: { listing: Listing }) {
+function LeaderboardRow({ listing }: { listing: LeaderboardListing }) {
   const podiumStyle =
     listing.rank in RANK_STYLES ? RANK_STYLES[listing.rank as 1 | 2 | 3] : null
+
   const category = CATEGORIES.find((item) => item.id === listing.categoryId)
 
   return (
     <div
+      role="link"
+      tabIndex={0}
+      onClick={() =>
+        window.open(`/api/click/${listing.id}`, '_blank', 'noopener,noreferrer')
+      }
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          window.open(
+            `/api/click/${listing.id}`,
+            '_blank',
+            'noopener,noreferrer',
+          )
+        }
+      }}
       className={[
-        'flex flex-col gap-3 rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-4 transition-shadow duration-150 hover:shadow-[0_4px_16px_-6px_rgba(20,16,43,0.12)] sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4 lg:px-6 lg:py-5',
+        'cursor-pointer flex flex-col gap-3 rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-4 transition-shadow duration-150 hover:shadow-[0_4px_16px_-6px_rgba(20,16,43,0.12)] sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4 lg:px-6 lg:py-5',
         podiumStyle?.ring ?? '',
         podiumStyle?.glow ?? '',
       ].join(' ')}
@@ -276,19 +292,31 @@ function LeaderboardRow({ listing }: { listing: Listing }) {
           <p className="truncate text-[15px] font-semibold leading-tight text-[#14102B]">
             {listing.name}
           </p>
-          <p className="truncate text-xs text-[#9B94A8]">{listing.domain}</p>
+
+          <a
+            href={`/api/click/${listing.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => event.stopPropagation()}
+            className="truncate text-xs text-[#9B94A8] hover:text-[#4B2AAD]"
+          >
+            {listing.domain}
+          </a>
         </div>
       </div>
 
-      {/* Category + amount + action, one real element — no display:contents */}
+      {/* Category + amount + action */}
       <div className="flex w-full flex-col items-start gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:items-center sm:gap-6">
         {category && <CategoryPill id={category.id} label={category.label} />}
+
         <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end sm:gap-6">
           <p className="text-lg font-bold tabular-nums leading-none text-[#14102B] sm:text-xl">
             ${listing.amount.toLocaleString()}
           </p>
+
           <button
             type="button"
+            onClick={(event) => event.stopPropagation()}
             className="rounded-xl border border-[#14102B] px-3.5 py-2 text-xs font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#14102B] hover:text-white sm:text-sm"
           >
             Outbid

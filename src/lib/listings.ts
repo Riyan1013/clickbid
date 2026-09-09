@@ -1,9 +1,10 @@
 import { supabase } from '@/lib/supabase'
+
 import type { CategoryId } from '@/lib/categories'
 
 /**
  * Shape the Leaderboard renders. Adapted from the previous static
- * `Listing` type (demoListings.ts) for live Supabase data:
+ * Listing type (demoListings.ts) for live Supabase data:
  * - `id` is now the Supabase row's UUID (used as the React key)
  *   instead of relying on `rank`.
  * - `rank` is no longer stored data — it's derived client-side from
@@ -59,4 +60,107 @@ export async function fetchLeaderboardListings(): Promise<
     categoryId: row.category_id as CategoryId,
     amount: row.amount,
   }))
+}
+
+export type SubmitBidInput = {
+  domain: string
+  name: string
+  url: string
+  categoryId: CategoryId
+  amount: number
+  description?: string
+  logoUrl?: string
+}
+
+/**
+ * Submit a bid for a website. Finds the listing by domain: if none
+ * exists, creates the listing and its first bid; if it exists, the
+ * bid must exceed the current amount and raises it. Returns the
+ * created/updated listing row.
+ */
+export async function submitBid(input: SubmitBidInput): Promise<ListingRow> {
+  const { data: existing, error: findError } = await supabase
+    .from('listings')
+    .select('id, name, domain, category_id, amount')
+    .eq('domain', input.domain)
+    .maybeSingle()
+
+  if (findError) {
+    // PGRST116 from maybeSingle() means multiple rows matched —
+    // only possible without a unique constraint on domain.
+    if (findError.code === 'PGRST116') {
+      throw new Error(
+        `Multiple listings exist for ${input.domain}. Add a unique constraint on listings.domain.`,
+      )
+    }
+
+    throw new Error(`Could not look up listing: ${findError.message}`)
+  }
+
+  let listing: ListingRow
+
+  if (!existing) {
+    const now = new Date().toISOString()
+
+    const { data: created, error: insertError } = await supabase
+      .from('listings')
+      .insert({
+        domain: input.domain,
+        name: input.name,
+        url: input.url,
+        category_id: input.categoryId,
+        amount: input.amount,
+        description: input.description ?? null,
+        logo_url: input.logoUrl ?? null,
+        created_at: now,
+        updated_at: now,
+      })
+      .select('id, name, domain, category_id, amount')
+      .single()
+
+    if (insertError) {
+      throw new Error(`Could not create listing: ${insertError.message}`)
+    }
+
+    listing = created
+  } else {
+    if (input.amount <= existing.amount) {
+      throw new Error(
+        `Bid must be higher than the current amount (${existing.amount}).`,
+      )
+    }
+
+    const { data: updated, error: updateError } = await supabase
+      .from('listings')
+      .update({
+        name: input.name,
+        url: input.url,
+        category_id: input.categoryId,
+        amount: input.amount,
+        description: input.description ?? null,
+        logo_url: input.logoUrl ?? null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id)
+      .select('id, name, domain, category_id, amount')
+      .single()
+
+    if (updateError) {
+      throw new Error(`Could not update listing: ${updateError.message}`)
+    }
+
+    listing = updated
+  }
+
+  const { error: bidError } = await supabase.from('bids').insert({
+    listing_id: listing.id,
+    amount: input.amount,
+    created_at: new Date().toISOString(),
+  })
+
+  if (bidError) {
+    throw new Error(`Could not record bid: ${bidError.message}`)
+  }
+
+  return listing
 }

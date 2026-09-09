@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { submitBid } from '@/lib/listings'
 
 type CategoryId =
   | 'ai-agents'
@@ -44,22 +45,91 @@ const CATEGORIES: Category[] = [
 const CURRENT_LEADER_BID = 12_500
 const MINIMUM_BID = CURRENT_LEADER_BID + 1
 
+type SubmitFeedback = {
+  type: 'success' | 'error'
+  message: string
+}
+
 /**
  * ClaimRank
  *
- * Frontend-only bidding control. Collects a product/domain, category
- * (via a custom dropdown), and bid amount. Rank is never chosen
- * manually — the section makes clear that bid amount alone determines
- * placement. No submission, API call, or payment logic is wired up.
+ * Bidding control. Collects a product/domain, category (via a custom
+ * dropdown), and bid amount, validates and normalizes the input, and
+ * submits the bid via submitBid(). Rank is never chosen manually —
+ * the section makes clear that bid amount alone determines placement.
+ * No payment logic is wired up yet.
  */
 export function ClaimRank() {
   const [productUrl, setProductUrl] = useState('')
   const [categoryId, setCategoryId] = useState<CategoryId | null>(null)
   const [bidAmount, setBidAmount] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [feedback, setFeedback] = useState<SubmitFeedback | null>(null)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    // Intentionally no-op for this step — no API, no payment, no submission.
+
+    // Guard against double submission while a request is in flight.
+    if (isSubmitting) return
+
+    const domain = normalizeDomain(productUrl)
+    if (!domain) {
+      setFeedback({
+        type: 'error',
+        message: 'Please enter a product or domain.',
+      })
+      return
+    }
+
+    if (!categoryId) {
+      setFeedback({
+        type: 'error',
+        message: 'Please choose a category.',
+      })
+      return
+    }
+
+    const amount = Number(bidAmount)
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setFeedback({
+        type: 'error',
+        message: 'Please enter a valid bid amount.',
+      })
+      return
+    }
+
+    setIsSubmitting(true)
+    setFeedback(null)
+
+    try {
+      const metadata = await fetchListingMetadata(domain)
+
+      await submitBid({
+        domain,
+        name: metadata.name,
+        url: metadata.url,
+        categoryId,
+        amount,
+        description: metadata.description,
+        logoUrl: metadata.logoUrl,
+      })
+
+      setFeedback({
+        type: 'success',
+        message:
+          'Bid submitted! Refresh the page to see it on the leaderboard.',
+      })
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Something went wrong. Please try again.',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -137,7 +207,7 @@ export function ClaimRank() {
                 </label>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#9B94A8]">
-                    $
+                    ${' '}
                   </span>
                   <input
                     id="bid-amount"
@@ -160,7 +230,8 @@ export function ClaimRank() {
             <div className="mt-2 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#4B2AAD] px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189] sm:w-auto"
+                disabled={isSubmitting}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#4B2AAD] px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189] disabled:pointer-events-none disabled:opacity-60 sm:w-auto"
               >
                 Claim Rank
                 <span aria-hidden="true">→</span>
@@ -169,11 +240,78 @@ export function ClaimRank() {
                 Payment will be handled securely at checkout.
               </p>
             </div>
+
+            {feedback && (
+              <p
+                aria-live="polite"
+                className={[
+                  'text-xs font-medium',
+                  feedback.type === 'error'
+                    ? 'text-[#B42318]'
+                    : 'text-[#4B2AAD]',
+                ].join(' ')}
+              >
+                {feedback.message}
+              </p>
+            )}
           </form>
         </div>
       </div>
     </section>
   )
+}
+
+/**
+ * Normalizes user input into a bare, lowercase domain, e.g.
+ * " https://Example.com/ " → "example.com": trims whitespace, strips
+ * a leading http:// or https://, and removes trailing slashes.
+ */
+function normalizeDomain(input: string) {
+  return input
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/+$/, '')
+    .toLowerCase()
+}
+
+/**
+ * Best-effort server-side metadata lookup for a domain. Any failure
+ * — network error, non-200 response, malformed JSON — falls back to
+ * the bare domain so the bid submission is never blocked.
+ */
+async function fetchListingMetadata(domain: string) {
+  const fallback = {
+    name: domain,
+    description: '',
+    logoUrl: '',
+    url: `https://${domain}`,
+  }
+
+  try {
+    const response = await fetch(
+      `/api/metadata?domain=${encodeURIComponent(domain)}`,
+    )
+
+    if (!response.ok) {
+      return fallback
+    }
+
+    const data = (await response.json()) as {
+      name?: string
+      description?: string
+      logoUrl?: string
+      url?: string
+    }
+
+    return {
+      name: data.name?.trim() || fallback.name,
+      description: data.description ?? '',
+      logoUrl: data.logoUrl ?? '',
+      url: data.url || fallback.url,
+    }
+  } catch {
+    return fallback
+  }
 }
 
 /**
