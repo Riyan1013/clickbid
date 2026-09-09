@@ -88,10 +88,14 @@ export async function GET(request: NextRequest) {
   const description =
     extractMetaContent(html, 'property', 'og:description') ??
     extractMetaContent(html, 'name', 'description') ??
+    extractMetaContent(html, 'name', 'twitter:description') ??
     ''
+  // Logo priority: favicon first (og:image is often a social preview
+  // banner rather than the brand mark), then og:image, then the
+  // conventional /favicon.ico.
   const imageSrc =
-    extractMetaContent(html, 'property', 'og:image') ??
     extractFaviconHref(html) ??
+    extractMetaContent(html, 'property', 'og:image') ??
     '/favicon.ico'
 
   return NextResponse.json({

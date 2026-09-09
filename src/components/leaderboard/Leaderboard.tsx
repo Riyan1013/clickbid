@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import { ITEMS_PER_PAGE, Pagination } from './Pagination'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import { CategoryIcon } from '@/lib/CategoryIcon'
 import {
   fetchLeaderboardListings,
+  formatTimeAgo,
   type LeaderboardListing,
 } from '@/lib/listings'
 
@@ -40,6 +42,7 @@ export function Leaderboard() {
   const [listings, setListings] = useState<LeaderboardListing[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [, setTimeTick] = useState(0)
 
   useEffect(() => {
     let isMounted = true
@@ -68,6 +71,46 @@ export function Leaderboard() {
     return () => {
       isMounted = false
     }
+  }, [])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('leaderboard-clicks')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'clicks',
+        },
+        (payload) => {
+          const listingId = payload.new.listing_id as string
+
+          setListings((currentListings) =>
+            currentListings.map((listing) =>
+              listing.id === listingId
+                ? {
+                    ...listing,
+                    clickCount: (listing.clickCount ?? 0) + 1,
+                  }
+                : listing,
+            ),
+          )
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setTimeTick((tick) => tick + 1)
+    }, 60_000)
+
+    return () => clearInterval(intervalId)
   }, [])
 
   const filteredListings =
@@ -255,41 +298,71 @@ function EmptyState() {
   )
 }
 
+type ListingWithOptionalMeta = LeaderboardListing & {
+  description?: string
+  clickCount?: number
+  timeAgoLabel?: string
+}
+
 function LeaderboardRow({ listing }: { listing: LeaderboardListing }) {
   const podiumStyle =
     listing.rank in RANK_STYLES ? RANK_STYLES[listing.rank as 1 | 2 | 3] : null
 
   const category = CATEGORIES.find((item) => item.id === listing.categoryId)
 
+  // description / timeAgoLabel / clickCount aren't part of
+  // LeaderboardListing / fetchLeaderboardListings() yet. Read
+  // defensively so each piece simply doesn't render until that data
+  // is wired up in lib/listings.ts — no placeholder/fake values.
+  const meta = listing as ListingWithOptionalMeta
+  const timeAgoLabel = formatTimeAgo(listing.updatedAt)
+
+  const metaParts: string[] = []
+  if (timeAgoLabel) metaParts.push(timeAgoLabel)
+  if (typeof meta.clickCount === 'number') {
+    metaParts.push(`${meta.clickCount.toLocaleString()} clicks`)
+  }
+
+  const claimAmount = listing.amount + 1
+
+  const openListing = () =>
+    window.open(`/api/click/${listing.id}`, '_blank', 'noopener,noreferrer')
+
   return (
-    <div
-      role="link"
-      tabIndex={0}
-      onClick={() =>
-        window.open(`/api/click/${listing.id}`, '_blank', 'noopener,noreferrer')
-      }
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          window.open(
-            `/api/click/${listing.id}`,
-            '_blank',
-            'noopener,noreferrer',
-          )
-        }
-      }}
-      className={[
-        'cursor-pointer flex flex-col gap-3 rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-4 transition-shadow duration-150 hover:shadow-[0_4px_16px_-6px_rgba(20,16,43,0.12)] sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4 lg:px-6 lg:py-5',
-        podiumStyle?.ring ?? '',
-        podiumStyle?.glow ?? '',
-      ].join(' ')}
-    >
-      {/* Identity: rank + mark + name/domain */}
-      <div className="flex min-w-0 items-center gap-3 sm:flex-1">
-        <RankBadge rank={listing.rank} />
-        <ProductMark name={listing.name} />
-        <div className="min-w-0">
-          <p className="truncate text-[15px] font-semibold leading-tight text-[#14102B]">
+    <div className="group relative pt-4">
+      {/* Floating "claim this rank" pill — appears on hover only */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#4B2AAD] px-3.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-[0_4px_12px_-2px_rgba(75,42,173,0.45)] transition-opacity duration-150 group-hover:opacity-100 sm:text-xs"
+      >
+        Claim this rank for ${claimAmount.toLocaleString()}
+      </span>
+
+      <div
+        role="link"
+        tabIndex={0}
+        onClick={openListing}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            openListing()
+          }
+        }}
+        className={[
+          'cursor-pointer flex flex-col gap-3 rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-5 transition-shadow duration-150 hover:shadow-[0_6px_20px_-8px_rgba(20,16,43,0.14)] sm:flex-row sm:items-start sm:gap-5 sm:px-6 sm:py-5 lg:px-7',
+          podiumStyle?.ring ?? '',
+          podiumStyle?.glow ?? '',
+        ].join(' ')}
+      >
+        {/* Rank + logo */}
+        <div className="flex shrink-0 items-center gap-3.5">
+          <RankBadge rank={listing.rank} />
+          <ProductMark name={listing.name} logoUrl={listing.logoUrl} />
+        </div>
+
+        {/* Name / domain / category / description / metadata */}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-semibold leading-tight text-[#14102B] sm:text-base">
             {listing.name}
           </p>
 
@@ -298,26 +371,65 @@ function LeaderboardRow({ listing }: { listing: LeaderboardListing }) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(event) => event.stopPropagation()}
-            className="truncate text-xs text-[#9B94A8] hover:text-[#4B2AAD]"
+            className="mt-0.5 block truncate text-xs text-[#9B94A8] transition-colors duration-150 hover:text-[#4B2AAD]"
           >
             {listing.domain}
           </a>
+
+          {(category || metaParts.length > 0) && (
+            <div className="mt-1.5 flex flex-wrap items-center">
+              {category && (
+                <div className="scale-90 origin-left">
+                  <CategoryPill id={category.id} label={category.label} />
+                </div>
+              )}
+
+              {metaParts.length > 0 && (
+                <p className="truncate text-xs text-[#9B94A8]">
+                  {category && (
+                    <span className="mx-1.5 text-[#E7E1F2]">&middot;</span>
+                  )}
+                  {metaParts.map((part, index) => (
+                    <span key={part}>
+                      {index === metaParts.length - 1 ? (
+                        <span className="font-medium text-[#4B2AAD]">
+                          {part}
+                        </span>
+                      ) : (
+                        part
+                      )}
+                      {index < metaParts.length - 1 && (
+                        <span className="mx-1.5 text-[#E7E1F2]">&middot;</span>
+                      )}
+                    </span>
+                  ))}
+                </p>
+              )}
+            </div>
+          )}
+
+          {listing.description && (
+            <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-[#5B5468]">
+              {listing.description}
+            </p>
+          )}
         </div>
-      </div>
 
-      {/* Category + amount + action */}
-      <div className="flex w-full flex-col items-start gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:items-center sm:gap-6">
-        {category && <CategoryPill id={category.id} label={category.label} />}
-
-        <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end sm:gap-6">
-          <p className="text-lg font-bold tabular-nums leading-none text-[#14102B] sm:text-xl">
-            ${listing.amount.toLocaleString()}
+        {/* Amount + action */}
+        <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:flex-col sm:items-end sm:justify-start sm:gap-2.5">
+          <p className="leading-none text-[#14102B]">
+            <span className="mr-0.5 align-top text-sm font-semibold text-[#9B94A8]">
+              $
+            </span>
+            <span className="text-xl font-bold tabular-nums sm:text-2xl">
+              {listing.amount.toLocaleString()}
+            </span>
           </p>
 
           <button
             type="button"
             onClick={(event) => event.stopPropagation()}
-            className="rounded-xl border border-[#14102B] px-3.5 py-2 text-xs font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#14102B] hover:text-white sm:text-sm"
+            className="shrink-0 rounded-xl border border-[#14102B] px-4 py-2 text-xs font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#14102B] hover:text-white sm:text-sm"
           >
             Outbid
           </button>
@@ -361,15 +473,32 @@ function RankBadge({ rank }: { rank: number }) {
   )
 }
 
-function ProductMark({ name }: { name: string }) {
+function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
+  // Tracks *which* URL failed, so a broken logo falls back to the
+  // initial letter while a different URL arriving later (e.g. a new
+  // bid's metadata overwrote logo_url) is retried, not stuck on the
+  // fallback.
+  const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null)
+
+  const logo = logoUrl && logoUrl !== failedLogoUrl ? logoUrl : null
   const initial = name.charAt(0).toUpperCase()
 
   return (
     <div
       aria-hidden="true"
-      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F5F1FB] text-sm font-bold text-[#4B2AAD] sm:h-11 sm:w-11"
+      className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#F5F1FB] text-sm font-bold text-[#4B2AAD] sm:h-11 sm:w-11"
     >
-      {initial}
+      {logo ? (
+        <img
+          src={logo}
+          alt=""
+          onError={() => setFailedLogoUrl(logo)}
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-contain"
+        />
+      ) : (
+        initial
+      )}
     </div>
   )
 }

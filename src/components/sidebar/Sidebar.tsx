@@ -1,7 +1,15 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { fetchLeaderboardListings } from '@/lib/listings'
+import { supabase } from '@/lib/supabase'
+
 type TopClickedSite = {
+  id: string
   name: string
   domain: string
   clicks: number
+  logoUrl?: string
 }
 
 const HOW_IT_WORKS_STEPS = [
@@ -22,20 +30,13 @@ const HOW_IT_WORKS_STEPS = [
   },
 ]
 
-// Demo data only — not real ClickBid click counts.
-const TOP_CLICKED: TopClickedSite[] = [
-  { name: 'Linear', domain: 'linear.app', clicks: 8_421 },
-  { name: 'Vercel', domain: 'vercel.com', clicks: 6_732 },
-  { name: 'Notion', domain: 'notion.so', clicks: 5_104 },
-]
-
 /**
  * Sidebar
  *
  * Right-hand supporting column: "How ClickBid Works", "Top Clicked",
- * and "Why ClickBid?" cards. Purely presentational — all data is
- * hardcoded demo content, no fetching or backend logic. Designed to
- * sit as the second column of the Leaderboard/Sidebar grid defined in
+ * and "Why ClickBid?" cards. Top Clicked loads live click data from
+ * Supabase on mount; the rest is presentational. Designed to sit as
+ * the second column of the Leaderboard/Sidebar grid defined in
  * page.tsx, and to stack full-width below the leaderboard on smaller
  * screens (the stacking itself is handled by that parent grid).
  */
@@ -90,31 +91,138 @@ function HowItWorksCard() {
   )
 }
 
+/**
+ * TopClickedCard
+ *
+ * Shows the three most-clicked listings, loaded from Supabase on
+ * mount and sorted by click count. Falls back to a short empty
+ * message when the fetch fails or the board is empty, so the
+ * sidebar always renders.
+ */
 function TopClickedCard() {
+  const [sites, setSites] = useState<TopClickedSite[]>([])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadTopClicked() {
+      try {
+        const listings = await fetchLeaderboardListings()
+
+        if (!isMounted) {
+          return
+        }
+
+        const topThree = [...listings]
+          .sort((a, b) => (b.clickCount ?? 0) - (a.clickCount ?? 0))
+          .slice(0, 3)
+          .map((listing) => ({
+            id: listing.id,
+            name: listing.name,
+            domain: listing.domain,
+            clicks: listing.clickCount ?? 0,
+            logoUrl: listing.logoUrl,
+          }))
+
+        setSites(topThree)
+      } catch {
+        // Fetch failed — keep the empty state.
+      }
+    }
+
+    loadTopClicked()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('top-clicked')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'clicks',
+        },
+        (payload) => {
+          const listingId = payload.new.listing_id as string
+
+          setSites((currentSites) =>
+            currentSites.map((site) =>
+              site.id === listingId
+                ? { ...site, clicks: site.clicks + 1 }
+                : site,
+            ),
+          )
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
   return (
     <SidebarCard title="Top Clicked">
-      <ul className="flex flex-col gap-4">
-        {TOP_CLICKED.map((site) => (
-          <li key={site.domain} className="flex items-center gap-3">
-            <div
-              aria-hidden="true"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F5F1FB] text-xs font-bold text-[#4B2AAD]"
-            >
-              {site.name.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold leading-tight text-[#14102B]">
-                {site.name}
+      {sites.length > 0 ? (
+        <ul className="flex flex-col gap-4">
+          {sites.map((site) => (
+            <li key={site.id} className="flex items-center gap-3">
+              <ProductMark name={site.name} logoUrl={site.logoUrl} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold leading-tight text-[#14102B]">
+                  {site.name}
+                </p>
+                <p className="truncate text-xs text-[#9B94A8]">{site.domain}</p>
+              </div>
+              <p className="shrink-0 text-xs font-medium tabular-nums text-[#5B5468]">
+                {site.clicks.toLocaleString()} clicks
               </p>
-              <p className="truncate text-xs text-[#9B94A8]">{site.domain}</p>
-            </div>
-            <p className="shrink-0 text-xs font-medium tabular-nums text-[#5B5468]">
-              {site.clicks.toLocaleString()} clicks
-            </p>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-xs text-[#9B94A8]">No clicks tracked yet.</p>
+      )}
     </SidebarCard>
+  )
+}
+
+/**
+ * ProductMark
+ *
+ * Same logo behavior as the leaderboard's ProductMark: renders the
+ * real logo when one exists and loads, falls back to the initial
+ * letter otherwise, and retries if a different URL arrives later.
+ * Sizing/shape is the sidebar's own.
+ */
+function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
+  const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null)
+
+  const logo = logoUrl && logoUrl !== failedLogoUrl ? logoUrl : null
+  const initial = name.charAt(0).toUpperCase()
+
+  return (
+    <div
+      aria-hidden="true"
+      className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F5F1FB] text-xs font-bold text-[#4B2AAD]"
+    >
+      {logo ? (
+        <img
+          src={logo}
+          alt=""
+          onError={() => setFailedLogoUrl(logo)}
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-contain"
+        />
+      ) : (
+        initial
+      )}
+    </div>
   )
 }
 
@@ -124,10 +232,7 @@ function WhyClickBidCard() {
       <h3 className="text-sm font-semibold uppercase tracking-wide text-[#5B5468]">
         Why ClickBid?
       </h3>
-      <div
-        className="mt-3 h-0.5 w-8 rounded-full bg-[#D4A73A]"
-        aria-hidden="true"
-      />
+      <div className="h-0.5 w-8 rounded-full bg-[#D4A73A]" aria-hidden="true" />
       <p className="mt-3 text-sm font-medium leading-relaxed text-[#14102B]">
         Bid for visibility. Get discovered. Track the clicks.
       </p>

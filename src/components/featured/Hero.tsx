@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { CATEGORIES } from '@/lib/categories'
+import { fetchLeaderboardListings } from '@/lib/listings'
 
 /**
  * Hero
@@ -86,7 +88,69 @@ export function Hero() {
   )
 }
 
+/** Display shape the FeaturedCard renders. */
+type FeaturedCardData = {
+  name: string
+  domain: string
+  categoryLabel: string
+  amount: number
+  logoUrl?: string
+}
+
+// Demo data shown while loading, when the leaderboard is empty, or
+// when the fetch fails — the hero must never break.
+const FALLBACK_FEATURED: FeaturedCardData = {
+  name: 'Linear',
+  domain: 'linear.app',
+  categoryLabel: 'Other',
+  amount: 12_500,
+}
+
+/**
+ * FeaturedCard
+ *
+ * Shows the current #1 leaderboard listing (highest bid), loaded from
+ * Supabase on mount. Falls back to demo data if the request fails or
+ * the board is empty, so the hero always renders.
+ */
 function FeaturedCard() {
+  const [featured, setFeatured] = useState<FeaturedCardData | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadFeatured() {
+      try {
+        // Ordered by amount descending, so the first row is #1.
+        const listings = await fetchLeaderboardListings()
+        const top = listings[0]
+
+        if (isMounted && top) {
+          setFeatured({
+            name: top.name,
+            domain: top.domain,
+            categoryLabel:
+              CATEGORIES.find((item) => item.id === top.categoryId)?.label ??
+              'Other',
+            amount: top.amount,
+            logoUrl: top.logoUrl,
+          })
+        }
+      } catch {
+        // Fetch failed — keep the fallback card.
+      }
+    }
+
+    loadFeatured()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const data = featured ?? FALLBACK_FEATURED
+  const minimumToReclaim = data.amount + 1
+
   return (
     <div className="mx-auto w-full max-w-[420px] rounded-[24px] border border-[#4B2AAD1F] bg-[#FCFBFA] p-6 shadow-[0_20px_48px_-16px_rgba(75,42,173,0.28)] transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_28px_60px_-16px_rgba(75,42,173,0.34)] sm:p-7">
       {/* Winner badge */}
@@ -100,19 +164,19 @@ function FeaturedCard() {
 
       {/* Product identity */}
       <div className="mt-5 flex items-center gap-3">
-        <ProductMark />
+        <ProductMark name={data.name} logoUrl={data.logoUrl} />
         <div>
           <p className="text-lg font-semibold leading-tight text-[#14102B]">
-            Linear
+            {data.name}
           </p>
-          <p className="text-sm text-[#9B94A8]">linear.app</p>
+          <p className="text-sm text-[#9B94A8]">{data.domain}</p>
         </div>
       </div>
 
       {/* Category pill */}
       <div className="mt-4">
         <span className="inline-flex items-center rounded-full bg-[#4B2AAD14] px-3 py-1 text-xs font-medium text-[#4B2AAD]">
-          Productivity
+          {data.categoryLabel}
         </span>
       </div>
 
@@ -120,9 +184,11 @@ function FeaturedCard() {
       <div className="mt-6 flex items-end justify-between border-t border-[#E7E1F2] pt-5">
         <div>
           <p className="text-[28px] font-bold tabular-nums leading-none text-[#14102B] sm:text-[32px]">
-            $12,500
+            ${data.amount.toLocaleString()}
           </p>
-          <p className="mt-1 text-xs text-[#9B94A8]">Minimum to reclaim #1</p>
+          <p className="mt-1 text-xs text-[#9B94A8]">
+            Minimum to reclaim #1: ${minimumToReclaim.toLocaleString()}
+          </p>
         </div>
 
         <Link
@@ -136,13 +202,36 @@ function FeaturedCard() {
   )
 }
 
-function ProductMark() {
+/**
+ * ProductMark
+ *
+ * Same logo behavior as the leaderboard's ProductMark: renders the
+ * real logo when one exists and loads, falls back to the initial
+ * letter otherwise, and retries if a different URL arrives later.
+ * Styling (gradient tile) is the hero's own.
+ */
+function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
+  const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null)
+
+  const logo = logoUrl && logoUrl !== failedLogoUrl ? logoUrl : null
+  const initial = name.charAt(0).toUpperCase()
+
   return (
     <div
       aria-hidden="true"
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4B2AAD] to-[#14102B] text-base font-bold text-white"
+      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#4B2AAD] to-[#14102B] text-base font-bold text-white"
     >
-      L
+      {logo ? (
+        <img
+          src={logo}
+          alt=""
+          onError={() => setFailedLogoUrl(logo)}
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-contain"
+        />
+      ) : (
+        initial
+      )}
     </div>
   )
 }

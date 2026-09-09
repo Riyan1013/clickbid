@@ -30,6 +30,10 @@ export type LeaderboardListing = {
   domain: string
   categoryId: CategoryId
   amount: number
+  description?: string
+  logoUrl?: string
+  clickCount?: number
+  updatedAt?: string
 }
 
 type ListingRow = {
@@ -38,6 +42,10 @@ type ListingRow = {
   domain: string
   category_id: string
   amount: number
+  description?: string | null
+  logo_url?: string | null
+  updated_at?: string | null
+  clicks?: { count: number }[]
 }
 
 export async function fetchLeaderboardListings(): Promise<
@@ -45,7 +53,19 @@ export async function fetchLeaderboardListings(): Promise<
 > {
   const { data, error } = await supabase
     .from('listings')
-    .select('id, name, domain, category_id, amount')
+    .select(
+      `
+  id,
+  name,
+  domain,
+  category_id,
+  amount,
+  description,
+  logo_url,
+  updated_at,
+  clicks(count)
+`,
+    )
     .order('amount', { ascending: false })
 
   if (error) {
@@ -59,7 +79,68 @@ export async function fetchLeaderboardListings(): Promise<
     domain: row.domain,
     categoryId: row.category_id as CategoryId,
     amount: row.amount,
+    description: row.description ?? undefined,
+    logoUrl: row.logo_url ?? undefined,
+    clickCount: row.clicks?.[0]?.count ?? 0,
+    updatedAt: row.updated_at ?? undefined,
   }))
+}
+
+/**
+ * Formats an updated_at timestamp as a short human-readable relative
+ * time — "just now", "5 minutes ago", "2 hours ago", "3 days ago",
+ * then weeks / months / years. Returns undefined when the timestamp
+ * is missing or unparsable so the UI simply omits that part.
+ */
+export function formatTimeAgo(
+  isoTimestamp: string | null | undefined,
+): string | undefined {
+  if (!isoTimestamp) {
+    return undefined
+  }
+
+  const date = new Date(isoTimestamp)
+
+  if (Number.isNaN(date.getTime())) {
+    return undefined
+  }
+
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+
+  if (seconds < 60) {
+    return 'just now'
+  }
+
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) {
+    return pluralize(minutes, 'minute')
+  }
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) {
+    return pluralize(hours, 'hour')
+  }
+
+  const days = Math.floor(hours / 24)
+  if (days < 7) {
+    return pluralize(days, 'day')
+  }
+
+  const weeks = Math.floor(days / 7)
+  if (weeks < 5) {
+    return pluralize(weeks, 'week')
+  }
+
+  const months = Math.floor(days / 30)
+  if (months < 12) {
+    return pluralize(months, 'month')
+  }
+
+  return pluralize(Math.floor(months / 12), 'year')
+}
+
+function pluralize(count: number, unit: string) {
+  return `${count} ${unit}${count === 1 ? '' : 's'} ago`
 }
 
 export type SubmitBidInput = {
@@ -74,11 +155,17 @@ export type SubmitBidInput = {
 
 /**
  * Submit a bid for a website. Finds the listing by domain: if none
- * exists, creates the listing and its first bid; if it exists, the
- * bid must exceed the current amount and raises it. Returns the
+ * exists, creates it with the bid as the initial amount; if it
+ * exists, the bid is a contribution added to the current total
+ * (e.g. $21,001 + $500 → $21,501). The bids row records the
+ * contributed amount, not the running total. Returns the
  * created/updated listing row.
  */
 export async function submitBid(input: SubmitBidInput): Promise<ListingRow> {
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    throw new Error('Bid amount must be greater than 0.')
+  }
+
   const { data: existing, error: findError } = await supabase
     .from('listings')
     .select('id, name, domain, category_id, amount')
@@ -115,7 +202,7 @@ export async function submitBid(input: SubmitBidInput): Promise<ListingRow> {
         created_at: now,
         updated_at: now,
       })
-      .select('id, name, domain, category_id, amount')
+      .select('id, name, domain, category_id, amount, description')
       .single()
 
     if (insertError) {
@@ -124,19 +211,15 @@ export async function submitBid(input: SubmitBidInput): Promise<ListingRow> {
 
     listing = created
   } else {
-    if (input.amount <= existing.amount) {
-      throw new Error(
-        `Bid must be higher than the current amount (${existing.amount}).`,
-      )
-    }
-
+    // Cumulative bidding: input.amount is a contribution added to
+    // the existing total, not a replacement for it.
     const { data: updated, error: updateError } = await supabase
       .from('listings')
       .update({
         name: input.name,
         url: input.url,
         category_id: input.categoryId,
-        amount: input.amount,
+        amount: existing.amount + input.amount,
         description: input.description ?? null,
         logo_url: input.logoUrl ?? null,
         updated_at: new Date().toISOString(),
