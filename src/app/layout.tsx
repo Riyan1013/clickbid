@@ -2,8 +2,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Outbid',
-  description: 'Claim your place on the leaderboard.',
+  title: 'ClickBid — Bid. Rank. Get Seen.',
+  description:
+    'ClickBid is a competitive leaderboard where websites and products bid for visibility and rank.',
 }
 
 export default function RootLayout({

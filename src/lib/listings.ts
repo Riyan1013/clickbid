@@ -86,6 +86,36 @@ export async function fetchLeaderboardListings(): Promise<
   }))
 }
 
+type BidRow = {
+  listing_id: string
+  amount: number
+}
+
+export async function fetchTodayBidTotals(): Promise<Map<string, number>> {
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+
+  const { data, error } = await supabase
+    .from('bids')
+    .select('listing_id, amount')
+    .gte('created_at', startOfToday.toISOString())
+
+  if (error) {
+    throw error
+  }
+
+  const totals = new Map<string, number>()
+
+  for (const bid of (data ?? []) as BidRow[]) {
+    totals.set(
+      bid.listing_id,
+      (totals.get(bid.listing_id) ?? 0) + Number(bid.amount),
+    )
+  }
+
+  return totals
+}
+
 /**
  * Formats an updated_at timestamp as a short human-readable relative
  * time — "just now", "5 minutes ago", "2 hours ago", "3 days ago",

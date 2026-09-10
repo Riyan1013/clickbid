@@ -7,6 +7,7 @@ import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import { CategoryIcon } from '@/lib/CategoryIcon'
 import {
   fetchLeaderboardListings,
+  fetchTodayBidTotals,
   formatTimeAgo,
   type LeaderboardListing,
 } from '@/lib/listings'
@@ -26,7 +27,7 @@ type Listing = {
   amount: number
 }
 
-type TimeFilter = 'all-time' | 'today'
+export type TimeFilter = 'all-time' | 'today'
 
 /**
  * Leaderboard
@@ -35,11 +36,21 @@ type TimeFilter = 'all-time' | 'today'
  * page.tsx, so it does not own its own outer section padding /
  * max-width / centering.
  */
-export function Leaderboard() {
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all-time')
+export function Leaderboard({
+  timeFilter,
+  onTimeFilterChange,
+  todayTotals,
+  onTodayTotalsChange,
+}: {
+  timeFilter: TimeFilter
+  onTimeFilterChange: (filter: TimeFilter) => void
+  todayTotals: Map<string, number>
+  onTodayTotalsChange: (totals: Map<string, number>) => void
+}) {
   const [activeFilter, setActiveFilter] = useState<FilterId>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [listings, setListings] = useState<LeaderboardListing[]>([])
+
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [, setTimeTick] = useState(0)
@@ -51,9 +62,14 @@ export function Leaderboard() {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await fetchLeaderboardListings()
+        const [data, totals] = await Promise.all([
+          fetchLeaderboardListings(),
+          fetchTodayBidTotals(),
+        ])
+
         if (isMounted) {
           setListings(data)
+          onTodayTotalsChange(totals)
         }
       } catch {
         if (isMounted) {
@@ -113,10 +129,25 @@ export function Leaderboard() {
     return () => clearInterval(intervalId)
   }, [])
 
+  const periodListings =
+    timeFilter === 'today'
+      ? listings
+          .filter((listing) => todayTotals.has(listing.id))
+          .map((listing) => ({
+            ...listing,
+            amount: todayTotals.get(listing.id) ?? 0,
+          }))
+          .sort((a, b) => b.amount - a.amount)
+          .map((listing, index) => ({
+            ...listing,
+            rank: index + 1,
+          }))
+      : listings
+
   const filteredListings =
     activeFilter === 'all'
-      ? listings
-      : listings.filter((listing) => listing.categoryId === activeFilter)
+      ? periodListings
+      : periodListings.filter((listing) => listing.categoryId === activeFilter)
 
   const totalPages = Math.ceil(filteredListings.length / ITEMS_PER_PAGE)
 
@@ -145,12 +176,18 @@ export function Leaderboard() {
           <TimeFilterButton
             label="All time"
             isActive={timeFilter === 'all-time'}
-            onClick={() => setTimeFilter('all-time')}
+            onClick={() => {
+              onTimeFilterChange('all-time')
+              setCurrentPage(1)
+            }}
           />
           <TimeFilterButton
             label="Today"
             isActive={timeFilter === 'today'}
-            onClick={() => setTimeFilter('today')}
+            onClick={() => {
+              onTimeFilterChange('today')
+              setCurrentPage(1)
+            }}
           />
         </div>
       </div>
@@ -196,8 +233,11 @@ export function Leaderboard() {
             onClick={() => {
               setIsLoading(true)
               setError(null)
-              fetchLeaderboardListings()
-                .then(setListings)
+              Promise.all([fetchLeaderboardListings(), fetchTodayBidTotals()])
+                .then(([data, totals]) => {
+                  setListings(data)
+                  onTodayTotalsChange(totals)
+                })
                 .catch(() =>
                   setError("Couldn't load the leaderboard. Please try again."),
                 )

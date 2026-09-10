@@ -13,7 +13,13 @@ import { fetchLeaderboardListings } from '@/lib/listings'
  * motion and hover elevation are done with plain Tailwind transition
  * utilities driven by a mount-state toggle — no animation library.
  */
-export function Hero() {
+export function Hero({
+  timeFilter,
+  todayTotals,
+}: {
+  timeFilter: 'all-time' | 'today'
+  todayTotals: Map<string, number>
+}) {
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
@@ -45,19 +51,19 @@ export function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <Link
-              href="/claim"
+            <a
+              href="#claim"
               className="inline-flex items-center gap-2 rounded-xl bg-[#4B2AAD] px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189]"
             >
               Claim your rank
               <span aria-hidden="true">→</span>
-            </Link>
+            </a>
 
             <Link
-              href="/how-it-works"
+              href="/rules"
               className="text-sm font-medium text-[#5B5468] underline decoration-[#E7E1F2] underline-offset-4 transition-colors duration-150 hover:text-[#4B2AAD]"
             >
-              See how it works
+              Rules
             </Link>
           </div>
         </div>
@@ -81,7 +87,7 @@ export function Hero() {
             className="pointer-events-none absolute inset-0 -z-10 translate-y-8 scale-95 rounded-[28px] bg-[#4B2AAD] opacity-[0.06] blur-3xl"
           />
 
-          <FeaturedCard />
+          <FeaturedCard timeFilter={timeFilter} todayTotals={todayTotals} />
         </div>
       </div>
     </section>
@@ -94,6 +100,7 @@ type FeaturedCardData = {
   domain: string
   categoryLabel: string
   amount: number
+  clickCount: number
   logoUrl?: string
 }
 
@@ -104,6 +111,7 @@ const FALLBACK_FEATURED: FeaturedCardData = {
   domain: 'linear.app',
   categoryLabel: 'Other',
   amount: 12_500,
+  clickCount: 8_421,
 }
 
 /**
@@ -113,7 +121,13 @@ const FALLBACK_FEATURED: FeaturedCardData = {
  * Supabase on mount. Falls back to demo data if the request fails or
  * the board is empty, so the hero always renders.
  */
-function FeaturedCard() {
+function FeaturedCard({
+  timeFilter,
+  todayTotals,
+}: {
+  timeFilter: 'all-time' | 'today'
+  todayTotals: Map<string, number>
+}) {
   const [featured, setFeatured] = useState<FeaturedCardData | null>(null)
 
   useEffect(() => {
@@ -121,9 +135,18 @@ function FeaturedCard() {
 
     async function loadFeatured() {
       try {
-        // Ordered by amount descending, so the first row is #1.
         const listings = await fetchLeaderboardListings()
-        const top = listings[0]
+
+        const top =
+          timeFilter === 'today'
+            ? listings
+                .filter((listing) => todayTotals.has(listing.id))
+                .map((listing) => ({
+                  ...listing,
+                  amount: todayTotals.get(listing.id) ?? 0,
+                }))
+                .sort((a, b) => b.amount - a.amount)[0]
+            : listings[0]
 
         if (isMounted && top) {
           setFeatured({
@@ -133,6 +156,7 @@ function FeaturedCard() {
               CATEGORIES.find((item) => item.id === top.categoryId)?.label ??
               'Other',
             amount: top.amount,
+            clickCount: top.clickCount ?? 0,
             logoUrl: top.logoUrl,
           })
         }
@@ -146,10 +170,9 @@ function FeaturedCard() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [timeFilter, todayTotals])
 
   const data = featured ?? FALLBACK_FEATURED
-  const minimumToReclaim = data.amount + 1
 
   return (
     <div className="mx-auto w-full max-w-[420px] rounded-[24px] border border-[#4B2AAD1F] bg-[#FCFBFA] p-6 shadow-[0_20px_48px_-16px_rgba(75,42,173,0.28)] transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_28px_60px_-16px_rgba(75,42,173,0.34)] sm:p-7">
@@ -159,7 +182,6 @@ function FeaturedCard() {
           <CrownIcon />
           #1 Leader
         </span>
-        <span className="text-xs font-medium text-[#9B94A8]">Current bid</span>
       </div>
 
       {/* Product identity */}
@@ -180,23 +202,33 @@ function FeaturedCard() {
         </span>
       </div>
 
-      {/* Amount */}
-      <div className="mt-6 flex items-end justify-between border-t border-[#E7E1F2] pt-5">
-        <div>
-          <p className="text-[28px] font-bold tabular-nums leading-none text-[#14102B] sm:text-[32px]">
-            ${data.amount.toLocaleString()}
-          </p>
-          <p className="mt-1 text-xs text-[#9B94A8]">
-            Minimum to reclaim #1: ${minimumToReclaim.toLocaleString()}
-          </p>
-        </div>
+      {/* Stats: current bid + clicks */}
+      <div className="mt-6 border-t border-[#E7E1F2] pt-5">
+        <div className="flex items-stretch gap-3">
+          {/* Bid */}
+          <div className="min-w-0 flex-1 rounded-xl bg-[#F5F1FB] px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9B94A8]">
+              Current bid
+            </p>
+            <p className="mt-1 text-[26px] font-bold tabular-nums leading-none text-[#14102B] sm:text-[30px]">
+              ${data.amount.toLocaleString()}
+            </p>
+          </div>
 
-        <Link
-          href="/claim"
-          className="rounded-xl border border-[#14102B] px-4 py-2 text-sm font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#14102B] hover:text-white"
-        >
-          Outbid
-        </Link>
+          {/* Clicks — navigates to /clicks */}
+          <Link
+            href="/clicks"
+            className="group flex min-w-0 flex-1 flex-col justify-between rounded-xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-3 transition-colors duration-150 hover:border-[#4B2AAD] hover:bg-[#F5F1FB]"
+          >
+            <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9B94A8] transition-colors duration-150 group-hover:text-[#4B2AAD]">
+              Clicks
+              <span aria-hidden="true">→</span>
+            </p>
+            <p className="mt-1 text-[26px] font-bold tabular-nums leading-none text-[#4B2AAD] transition-colors duration-150 group-hover:text-[#3D2189] sm:text-[30px]">
+              {data.clickCount.toLocaleString()}
+            </p>
+          </Link>
+        </div>
       </div>
     </div>
   )
@@ -219,7 +251,7 @@ function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
   return (
     <div
       aria-hidden="true"
-      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#4B2AAD] to-[#14102B] text-base font-bold text-white"
+      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#F5F1FB] text-base font-bold text-[#14102B]"
     >
       {logo ? (
         <img

@@ -6,7 +6,7 @@ import { useState } from 'react'
 const NAV_LINKS = [
   { label: 'Leaderboard', href: '/' },
   { label: 'Categories', href: '/categories' },
-  { label: 'How it works', href: '/how-it-works' },
+  { label: 'Rules', href: '/rules' },
   { label: 'About', href: '/about' },
 ]
 
@@ -27,13 +27,9 @@ export function Header() {
       <Link
         href="/"
         onClick={() => setIsMenuOpen(false)}
-        className="flex shrink-0 items-center gap-2"
+        className="flex shrink-0 items-center"
       >
-        <BrandMark />
-        <span className="text-lg font-semibold tracking-tight">
-          <span className="text-[#14102B]">Click</span>
-          <span className="text-[#4B2AAD]">Bid</span>
-        </span>
+        <img src="/clickbid-logo.svg" alt="ClickBid" className="h-12 w-auto" />
       </Link>
 
       {/* Desktop navigation */}
@@ -52,13 +48,7 @@ export function Header() {
       {/* Desktop actions */}
       <div className="hidden items-center gap-3 lg:flex">
         <Link
-          href="/submit"
-          className="rounded-xl border border-[#E7E1F2] px-4 py-2 text-sm font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#F5F1FB]"
-        >
-          Submit
-        </Link>
-        <Link
-          href="/claim"
+          href="#claim"
           className="rounded-xl bg-[#4B2AAD] px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189]"
         >
           Claim Rank
@@ -68,7 +58,7 @@ export function Header() {
       {/* Mobile / tablet actions: primary CTA + menu toggle only */}
       <div className="flex items-center gap-2 lg:hidden">
         <Link
-          href="/claim"
+          href="#claim"
           className="rounded-xl bg-[#4B2AAD] px-3 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189] sm:px-4"
         >
           <span className="sm:hidden">Claim</span>
@@ -99,39 +89,10 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/submit"
-              onClick={() => setIsMenuOpen(false)}
-              className="mt-2 rounded-xl border border-[#E7E1F2] px-3 py-2 text-center text-sm font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#F5F1FB]"
-            >
-              Submit
-            </Link>
           </nav>
         </div>
       )}
     </header>
-  )
-}
-
-function BrandMark() {
-  return (
-    <svg
-      width="28"
-      height="28"
-      viewBox="0 0 28 28"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <circle cx="14" cy="14" r="13" stroke="#4B2AAD" strokeWidth="2" />
-      <path
-        d="M9 15.5L13 11.5L17 15.5"
-        stroke="#4B2AAD"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   )
 }
 

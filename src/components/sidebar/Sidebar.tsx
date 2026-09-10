@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { fetchLeaderboardListings } from '@/lib/listings'
 import { supabase } from '@/lib/supabase'
@@ -132,14 +133,8 @@ function TopClickedCard() {
 
     loadTopClicked()
 
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  useEffect(() => {
     const channel = supabase
-      .channel('top-clicked')
+      .channel('sidebar-top-clicked')
       .on(
         'postgres_changes',
         {
@@ -147,21 +142,14 @@ function TopClickedCard() {
           schema: 'public',
           table: 'clicks',
         },
-        (payload) => {
-          const listingId = payload.new.listing_id as string
-
-          setSites((currentSites) =>
-            currentSites.map((site) =>
-              site.id === listingId
-                ? { ...site, clicks: site.clicks + 1 }
-                : site,
-            ),
-          )
+        () => {
+          loadTopClicked()
         },
       )
       .subscribe()
 
     return () => {
+      isMounted = false
       supabase.removeChannel(channel)
     }
   }, [])
@@ -188,6 +176,13 @@ function TopClickedCard() {
       ) : (
         <p className="text-xs text-[#9B94A8]">No clicks tracked yet.</p>
       )}
+
+      <Link
+        href="/clicks"
+        className="mt-6 flex w-full items-center justify-center rounded-full border border-[#E7E1F2] bg-white px-5 py-3 text-sm font-semibold text-[#14102B] transition-colors duration-150 hover:bg-[#F5F1FB]"
+      >
+        Show all clicks
+      </Link>
     </SidebarCard>
   )
 }

@@ -1,7 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { submitBid } from '@/lib/listings'
+import {
+  submitBid,
+  fetchLeaderboardListings,
+  type LeaderboardListing,
+} from '@/lib/listings'
 
 type CategoryId =
   | 'ai-agents'
@@ -41,10 +45,6 @@ const CATEGORIES: Category[] = [
   { id: 'other', label: 'Other' },
 ]
 
-// Demonstration data only — mirrors the Hero's placeholder #1 listing.
-const CURRENT_LEADER_BID = 12_500
-const MINIMUM_BID = CURRENT_LEADER_BID + 1
-
 type SubmitFeedback = {
   type: 'success' | 'error'
   message: string
@@ -65,6 +65,40 @@ export function ClaimRank() {
   const [bidAmount, setBidAmount] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState<SubmitFeedback | null>(null)
+  const [listings, setListings] = useState<LeaderboardListing[]>([])
+  const [isLoadingListings, setIsLoadingListings] = useState(true)
+
+  // Load current listings once so we can tell whether the entered
+  // domain already exists and show its live total bid. Non-critical:
+  // if this fails, every domain is simply treated as new — it never
+  // blocks the actual bid submission flow below.
+  useEffect(() => {
+    let isMounted = true
+
+    fetchLeaderboardListings()
+      .then((data) => {
+        if (isMounted) setListings(data)
+      })
+      .catch(() => {
+        // Silently degrade — see comment above.
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingListings(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const domain = normalizeDomain(productUrl)
+  const existingListing = domain
+    ? listings.find((listing) => listing.domain.toLowerCase() === domain)
+    : undefined
+  const enteredAmount = Number(bidAmount) || 0
+  const projectedTotal = existingListing
+    ? existingListing.amount + enteredAmount
+    : enteredAmount
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -133,7 +167,10 @@ export function ClaimRank() {
   }
 
   return (
-    <section className="px-4 pb-14 sm:px-6 md:px-10 lg:px-16 lg:pb-20">
+    <section
+      id="claim"
+      className="px-4 pb-14 sm:px-6 md:px-10 lg:px-16 lg:pb-20"
+    >
       <div className="mx-auto max-w-[1200px] rounded-[20px] border border-[#E7E1F2] bg-[#F5F1FB] p-6 sm:p-8 lg:p-10">
         <div className="grid gap-10 lg:grid-cols-[5fr_7fr] lg:gap-12">
           {/* Left: context */}
@@ -151,23 +188,53 @@ export function ClaimRank() {
               Your rank is determined by your bid.
             </p>
 
-            {/* Current leader / minimum bid indicator */}
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[#E7E1F2] pt-5">
-              <div>
-                <p className="text-xs text-[#9B94A8]">Current #1</p>
-                <p className="text-base font-semibold tabular-nums text-[#14102B]">
-                  ${CURRENT_LEADER_BID.toLocaleString()}
+            {/* Existing-domain / new-domain bid status */}
+            <div className="mt-6 border-t border-[#E7E1F2] pt-5">
+              {isLoadingListings ? (
+                <p className="text-xs text-[#9B94A8]">
+                  Checking current listings…
                 </p>
-              </div>
-              <div>
-                <p className="text-xs text-[#9B94A8]">Minimum bid</p>
-                <p className="text-base font-semibold tabular-nums text-[#14102B]">
-                  ${MINIMUM_BID.toLocaleString()}
+              ) : !domain ? (
+                <p className="text-xs text-[#9B94A8]">
+                  Enter a domain to see its current bid status.
                 </p>
-              </div>
-              <span className="text-xs text-[#9B94A8]">
-                (demonstration data)
-              </span>
+              ) : existingListing ? (
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                  <div>
+                    <p className="text-xs text-[#9B94A8]">Current total bid</p>
+                    <p className="text-base font-semibold tabular-nums text-[#14102B]">
+                      ${existingListing.amount.toLocaleString()}
+                    </p>
+                  </div>
+                  {enteredAmount > 0 && (
+                    <div>
+                      <p className="text-xs text-[#9B94A8]">
+                        New total after your bid
+                      </p>
+                      <p className="text-base font-semibold tabular-nums text-[#14102B]">
+                        ${projectedTotal.toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                  <span className="text-xs text-[#9B94A8]">
+                    This domain is already listed — your bid adds to its total.
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                  <div>
+                    <p className="text-xs text-[#9B94A8]">Starting bid</p>
+                    <p className="text-base font-semibold tabular-nums text-[#14102B]">
+                      {enteredAmount > 0
+                        ? `$${enteredAmount.toLocaleString()}`
+                        : '—'}
+                    </p>
+                  </div>
+                  <span className="text-xs text-[#9B94A8]">
+                    New domain — your bid becomes its starting total.
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -222,7 +289,8 @@ export function ClaimRank() {
                   />
                 </div>
                 <p className="mt-1.5 text-xs text-[#9B94A8]">
-                  Bid higher than the current rank you want.
+                  For an existing domain, this amount is added to its current
+                  total.
                 </p>
               </div>
             </div>
