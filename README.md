@@ -1,6 +1,4 @@
-Here’s an updated README reflecting the **actual current state** of ClickBid after today’s work:
 
-````md
 # ClickBid
 
 **CLICK → BID → RANK**
