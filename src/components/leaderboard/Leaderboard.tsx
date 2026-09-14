@@ -29,6 +29,12 @@ type Listing = {
 
 export type TimeFilter = 'all-time' | 'today'
 
+export type OutbidTarget = {
+  rank: number
+  name: string
+  amount: number
+}
+
 /**
  * Leaderboard
  *
@@ -41,11 +47,15 @@ export function Leaderboard({
   onTimeFilterChange,
   todayTotals,
   onTodayTotalsChange,
+  onOutbid,
+  onClaimRank,
 }: {
   timeFilter: TimeFilter
   onTimeFilterChange: (filter: TimeFilter) => void
   todayTotals: Map<string, number>
   onTodayTotalsChange: (totals: Map<string, number>) => void
+  onOutbid?: (target: OutbidTarget) => void
+  onClaimRank?: () => void
 }) {
   const [activeFilter, setActiveFilter] = useState<FilterId>('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -252,10 +262,14 @@ export function Leaderboard({
         <>
           <div className="mt-6 flex flex-col gap-3">
             {filteredListings.length === 0 ? (
-              <EmptyState />
+              <EmptyState onClaimRank={onClaimRank} />
             ) : (
               pageListings.map((listing) => (
-                <LeaderboardRow key={listing.id} listing={listing} />
+                <LeaderboardRow
+                  key={listing.id}
+                  listing={listing}
+                  onOutbid={onOutbid}
+                />
               ))
             )}
           </div>
@@ -319,7 +333,7 @@ const RANK_STYLES = {
   },
 } as const
 
-function EmptyState() {
+function EmptyState({ onClaimRank }: { onClaimRank?: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] px-6 py-14 text-center">
       <h3 className="text-base font-semibold text-[#14102B]">
@@ -330,9 +344,10 @@ function EmptyState() {
       </p>
       <button
         type="button"
-        className="mt-5 rounded-xl bg-[#4B2AAD] px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#3A2288]"
+        onClick={onClaimRank}
+        className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#4B2AAD] px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189]"
       >
-        Claim Rank
+        Claim Rank →
       </button>
     </div>
   )
@@ -344,7 +359,22 @@ type ListingWithOptionalMeta = LeaderboardListing & {
   timeAgoLabel?: string
 }
 
-function LeaderboardRow({ listing }: { listing: LeaderboardListing }) {
+function LeaderboardRow({
+  listing,
+  onOutbid,
+}: {
+  listing: LeaderboardListing
+  onOutbid?: (target: OutbidTarget) => void
+}) {
+  function handleOutbidClick(event: React.MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation()
+    onOutbid?.({
+      rank: listing.rank,
+      name: listing.name,
+      amount: listing.amount,
+    })
+  }
+
   const podiumStyle =
     listing.rank in RANK_STYLES ? RANK_STYLES[listing.rank as 1 | 2 | 3] : null
 
@@ -468,7 +498,7 @@ function LeaderboardRow({ listing }: { listing: LeaderboardListing }) {
 
           <button
             type="button"
-            onClick={(event) => event.stopPropagation()}
+            onClick={handleOutbidClick}
             className="shrink-0 rounded-xl border border-[#14102B] px-4 py-2 text-xs font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#14102B] hover:text-white sm:text-sm"
           >
             Outbid

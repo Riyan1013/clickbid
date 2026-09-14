@@ -7,7 +7,7 @@ import {
   type LeaderboardListing,
 } from '@/lib/listings'
 
-type CategoryId =
+export type CategoryId =
   | 'ai-agents'
   | 'seo-visibility'
   | 'marketing-advertising'
@@ -28,7 +28,7 @@ interface Category {
   label: string
 }
 
-const CATEGORIES: Category[] = [
+export const CATEGORIES: Category[] = [
   { id: 'ai-agents', label: 'AI & Agents' },
   { id: 'seo-visibility', label: 'SEO & Visibility' },
   { id: 'marketing-advertising', label: 'Marketing & Advertising' },
@@ -72,6 +72,7 @@ export function ClaimRank() {
   // domain already exists and show its live total bid. Non-critical:
   // if this fails, every domain is simply treated as new — it never
   // blocks the actual bid submission flow below.
+
   useEffect(() => {
     let isMounted = true
 
@@ -334,7 +335,7 @@ export function ClaimRank() {
  * " https://Example.com/ " → "example.com": trims whitespace, strips
  * a leading http:// or https://, and removes trailing slashes.
  */
-function normalizeDomain(input: string) {
+export function normalizeDomain(input: string) {
   return input
     .trim()
     .replace(/^https?:\/\//i, '')
@@ -347,7 +348,7 @@ function normalizeDomain(input: string) {
  * — network error, non-200 response, malformed JSON — falls back to
  * the bare domain so the bid submission is never blocked.
  */
-async function fetchListingMetadata(domain: string) {
+export async function fetchListingMetadata(domain: string) {
   const fallback = {
     name: domain,
     description: '',
@@ -390,7 +391,7 @@ async function fetchListingMetadata(domain: string) {
  * renders a bordered, rounded panel of icon + label rows, with the
  * active category highlighted in a subtle violet tint.
  */
-function CategorySelect({
+export function CategorySelect({
   value,
   onChange,
 }: {

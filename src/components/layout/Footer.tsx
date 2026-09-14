@@ -2,8 +2,9 @@ import Link from 'next/link'
 
 const FOOTER_LINKS = [
   { label: 'Leaderboard', href: '/' },
-  { label: 'How It Works', href: '/how-it-works' },
-  { label: 'Claim Rank', href: '/claim' },
+  { label: 'Categories', href: '/categories' },
+  { label: 'Rules', href: '/rules' },
+  { label: 'About', href: '/about' },
 ]
 
 /**
@@ -21,11 +22,7 @@ export function Footer() {
         {/* Brand + tagline */}
         <div className="max-w-xs">
           <Link href="/" className="inline-flex items-center gap-2">
-            <BrandMark />
-            <span className="text-base font-semibold tracking-tight">
-              <span className="text-[#14102B]">Click</span>
-              <span className="text-[#4B2AAD]">Bid</span>
-            </span>
+            <img src="/clickbid-logo.svg" alt="" className="h-12 w-auto" />
           </Link>
           <p className="mt-3 text-sm leading-relaxed text-[#5B5468]">
             Bid for visibility. Get discovered. Track the clicks.
@@ -56,27 +53,5 @@ export function Footer() {
         </p>
       </div>
     </footer>
-  )
-}
-
-function BrandMark() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 28 28"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <circle cx="14" cy="14" r="13" stroke="#4B2AAD" strokeWidth="2" />
-      <path
-        d="M9 15.5L13 11.5L17 15.5"
-        stroke="#4B2AAD"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   )
 }

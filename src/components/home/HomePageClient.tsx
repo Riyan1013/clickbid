@@ -3,18 +3,30 @@
 import { useState } from 'react'
 import { Hero } from '@/components/featured/Hero'
 import { ClaimRank } from '@/components/featured/ClaimRank'
-import { Leaderboard } from '@/components/leaderboard/Leaderboard'
+import {
+  Leaderboard,
+  type OutbidTarget,
+} from '@/components/leaderboard/Leaderboard'
+import { OutbidDialog } from '@/components/leaderboard/OutbidDialog'
 import { Sidebar } from '@/components/sidebar/Sidebar'
+import { ClaimRankDialog } from '@/components/featured/ClaimRankDialog'
 
 export type TimeFilter = 'all-time' | 'today'
 
 export function HomePageClient() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all-time')
   const [todayTotals, setTodayTotals] = useState<Map<string, number>>(new Map())
+  const [outbidTarget, setOutbidTarget] = useState<OutbidTarget | null>(null)
+  const [isClaimRankOpen, setIsClaimRankOpen] = useState(false)
+
+  function handleOutbid(target: OutbidTarget) {
+    setOutbidTarget(target)
+  }
 
   return (
     <>
       <Hero timeFilter={timeFilter} todayTotals={todayTotals} />
+
       <ClaimRank />
 
       <section className="px-4 pb-16 sm:px-6 md:px-10 lg:px-16 lg:pb-24">
@@ -24,11 +36,24 @@ export function HomePageClient() {
             onTimeFilterChange={setTimeFilter}
             todayTotals={todayTotals}
             onTodayTotalsChange={setTodayTotals}
+            onOutbid={handleOutbid}
+            onClaimRank={() => setIsClaimRankOpen(true)}
           />
 
           <Sidebar />
         </div>
       </section>
+
+      <OutbidDialog
+        target={outbidTarget}
+        timeFilter={timeFilter}
+        onClose={() => setOutbidTarget(null)}
+      />
+
+      <ClaimRankDialog
+        isOpen={isClaimRankOpen}
+        onClose={() => setIsClaimRankOpen(false)}
+      />
     </>
   )
 }
