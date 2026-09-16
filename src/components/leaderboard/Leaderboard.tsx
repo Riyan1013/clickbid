@@ -174,15 +174,15 @@ export function Leaderboard({
     <div className="flex min-w-0 flex-col">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold leading-tight text-[#14102B] sm:text-[28px]">
+          <h2 className="text-2xl font-bold leading-tight text-ink sm:text-[28px]">
             Leaderboard
           </h2>
-          <p className="mt-1 text-sm text-[#5B5468] sm:text-[15px]">
+          <p className="mt-1 text-sm text-secondary sm:text-[15px]">
             See who&apos;s winning the internet.
           </p>
         </div>
 
-        <div className="inline-flex w-fit items-center gap-1 rounded-xl border border-[#E7E1F2] bg-[#F5F1FB] p-1">
+        <div className="inline-flex w-fit items-center gap-1 rounded-xl border border-border bg-inset p-1">
           <TimeFilterButton
             label="All time"
             isActive={timeFilter === 'all-time'}
@@ -215,8 +215,8 @@ export function Leaderboard({
               className={[
                 'flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-150',
                 activeFilter === filter.id
-                  ? 'bg-[#4B2AAD] text-white'
-                  : 'border border-[#E7E1F2] bg-[#FCFBFA] text-[#5B5468] hover:border-[#4B2AAD] hover:text-[#4B2AAD]',
+                  ? 'bg-primary text-on-primary'
+                  : 'border border-border bg-surface text-secondary hover:border-primary hover:text-primary',
               ].join(' ')}
             >
               <CategoryIcon id={filter.id} className="h-3.5 w-3.5" />
@@ -231,13 +231,13 @@ export function Leaderboard({
           {[0, 1, 2].map((placeholder) => (
             <div
               key={placeholder}
-              className="h-[72px] animate-pulse rounded-2xl border border-[#E7E1F2] bg-[#F5F1FB] sm:h-[80px]"
+              className="h-[72px] animate-pulse rounded-2xl border border-border bg-inset sm:h-[80px]"
             />
           ))}
         </div>
       ) : error ? (
-        <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-10 text-center">
-          <p className="text-sm text-[#5B5468]">{error}</p>
+        <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-10 text-center">
+          <p className="text-sm text-secondary">{error}</p>
           <button
             type="button"
             onClick={() => {
@@ -253,7 +253,7 @@ export function Leaderboard({
                 )
                 .finally(() => setIsLoading(false))
             }}
-            className="rounded-xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-2 text-sm font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#F5F1FB]"
+            className="rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors duration-150 hover:bg-inset"
           >
             Try again
           </button>
@@ -303,8 +303,8 @@ function TimeFilterButton({
       className={[
         'rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors duration-150',
         isActive
-          ? 'bg-[#FCFBFA] text-[#14102B] shadow-[0_1px_2px_rgba(20,16,43,0.08)]'
-          : 'text-[#5B5468] hover:text-[#14102B]',
+          ? 'bg-surface text-ink shadow-[0_1px_2px_rgba(20,16,43,0.08)]'
+          : 'text-secondary hover:text-ink',
       ].join(' ')}
     >
       {label}
@@ -316,36 +316,43 @@ const RANK_STYLES = {
   1: {
     badgeBg: 'bg-[#D4A73A]',
     badgeText: 'text-white',
-    ring: 'ring-1 ring-[#D4A73A66]',
-    glow: 'shadow-[0_8px_24px_-8px_rgba(212,167,58,0.35)]',
+    badgeRing: 'ring-2 ring-[#D4A73A40]',
+    ring: 'ring-1 ring-[#D4A73A80]',
+    glow: 'shadow-[0_12px_32px_-12px_rgba(212,167,58,0.30)] hover:shadow-[0_16px_40px_-12px_rgba(212,167,58,0.38)]',
+    cardBg: 'bg-gold/5',
+    amountPrefix: 'text-[#4B2AAD]',
   },
   2: {
     badgeBg: 'bg-[#B9B4C4]',
     badgeText: 'text-white',
+    badgeRing: '',
     ring: 'ring-1 ring-[#B9B4C466]',
     glow: '',
+    cardBg: '',
+    amountPrefix: 'text-[#4B2AAD]',
   },
   3: {
     badgeBg: 'bg-[#C08552]',
     badgeText: 'text-white',
+    badgeRing: '',
     ring: 'ring-1 ring-[#C0855266]',
     glow: '',
+    cardBg: '',
+    amountPrefix: 'text-[#4B2AAD]',
   },
 } as const
 
 function EmptyState({ onClaimRank }: { onClaimRank?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] px-6 py-14 text-center">
-      <h3 className="text-base font-semibold text-[#14102B]">
-        No listings yet
-      </h3>
-      <p className="mt-1.5 text-sm text-[#5B5468]">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border border-border bg-surface px-6 py-14 text-center">
+      <h3 className="text-base font-semibold text-ink">No listings yet</h3>
+      <p className="mt-1.5 text-sm text-secondary">
         Be the first to claim a rank in this category.
       </p>
       <button
         type="button"
         onClick={onClaimRank}
-        className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#4B2AAD] px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189]"
+        className="mt-4 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary transition-colors duration-150 hover:bg-primary-hover"
       >
         Claim Rank →
       </button>
@@ -403,7 +410,7 @@ function LeaderboardRow({
       {/* Floating "claim this rank" pill — appears on hover only */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#4B2AAD] px-3.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-[0_4px_12px_-2px_rgba(75,42,173,0.45)] transition-opacity duration-150 group-hover:opacity-100 sm:text-xs"
+        className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-primary px-3.5 py-1 text-[11px] font-semibold text-on-primary opacity-0 shadow-[0_4px_12px_-2px_rgba(75,42,173,0.45)] transition-opacity duration-150 group-hover:opacity-100 sm:text-xs"
       >
         Claim this rank for ${claimAmount.toLocaleString()}
       </span>
@@ -419,7 +426,8 @@ function LeaderboardRow({
           }
         }}
         className={[
-          'cursor-pointer flex flex-col gap-3 rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-5 transition-shadow duration-150 hover:shadow-[0_6px_20px_-8px_rgba(20,16,43,0.14)] sm:flex-row sm:items-start sm:gap-5 sm:px-6 sm:py-5 lg:px-7',
+          'cursor-pointer flex flex-col gap-3 rounded-2xl border border-border px-4 py-5 transition-shadow duration-150 hover:shadow-[0_6px_20px_-8px_rgba(20,16,43,0.14)] sm:flex-row sm:items-start sm:gap-5 sm:px-6 sm:py-5 lg:px-7',
+          podiumStyle?.cardBg ?? 'bg-surface',
           podiumStyle?.ring ?? '',
           podiumStyle?.glow ?? '',
         ].join(' ')}
@@ -432,7 +440,7 @@ function LeaderboardRow({
 
         {/* Name / domain / category / description / metadata */}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold leading-tight text-[#14102B] sm:text-base">
+          <p className="truncate text-[15px] font-semibold leading-tight text-ink sm:text-base">
             {listing.name}
           </p>
 
@@ -441,7 +449,7 @@ function LeaderboardRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(event) => event.stopPropagation()}
-            className="mt-0.5 block truncate text-xs text-[#9B94A8] transition-colors duration-150 hover:text-[#4B2AAD]"
+            className="mt-0.5 block truncate text-xs text-muted transition-colors duration-150 hover:text-primary"
           >
             {listing.domain}
           </a>
@@ -455,21 +463,19 @@ function LeaderboardRow({
               )}
 
               {metaParts.length > 0 && (
-                <p className="truncate text-xs text-[#9B94A8]">
+                <p className="truncate text-xs text-muted">
                   {category && (
                     <span className="mx-1.5 text-[#E7E1F2]">&middot;</span>
                   )}
                   {metaParts.map((part, index) => (
                     <span key={part}>
                       {index === metaParts.length - 1 ? (
-                        <span className="font-medium text-[#4B2AAD]">
-                          {part}
-                        </span>
+                        <span className="font-medium text-primary">{part}</span>
                       ) : (
                         part
                       )}
                       {index < metaParts.length - 1 && (
-                        <span className="mx-1.5 text-[#E7E1F2]">&middot;</span>
+                        <span className="mx-1.5 text-border">&middot;</span>
                       )}
                     </span>
                   ))}
@@ -479,7 +485,7 @@ function LeaderboardRow({
           )}
 
           {listing.description && (
-            <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-[#5B5468]">
+            <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-secondary">
               {listing.description}
             </p>
           )}
@@ -487,8 +493,13 @@ function LeaderboardRow({
 
         {/* Amount + action */}
         <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:flex-col sm:items-end sm:justify-start sm:gap-2.5">
-          <p className="leading-none text-[#14102B]">
-            <span className="mr-0.5 align-top text-sm font-semibold text-[#9B94A8]">
+          <p className="leading-none text-primary">
+            <span
+              className={[
+                'mr-0.5 align-top text-sm font-semibold',
+                podiumStyle?.amountPrefix ?? 'text-primary',
+              ].join(' ')}
+            >
               $
             </span>
             <span className="text-xl font-bold tabular-nums sm:text-2xl">
@@ -499,7 +510,7 @@ function LeaderboardRow({
           <button
             type="button"
             onClick={handleOutbidClick}
-            className="shrink-0 rounded-xl border border-[#14102B] px-4 py-2 text-xs font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#14102B] hover:text-white sm:text-sm"
+            className="shrink-0 rounded-xl border border-ink px-4 py-2 text-xs font-medium text-ink transition-colors duration-150 hover:bg-ink hover:text-surface sm:text-sm"
           >
             Outbid
           </button>
@@ -511,7 +522,7 @@ function LeaderboardRow({
 
 function CategoryPill({ id, label }: { id: CategoryId; label: string }) {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#4B2AAD14] px-3 py-1 text-xs font-medium text-[#4B2AAD]">
+    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-primary/8 px-3 py-1 text-xs font-medium text-primary">
       <CategoryIcon id={id} className="h-3.5 w-3.5" />
       {label}
     </span>
@@ -529,6 +540,7 @@ function RankBadge({ rank }: { rank: number }) {
           'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold tabular-nums',
           podiumStyle.badgeBg,
           podiumStyle.badgeText,
+          podiumStyle.badgeRing,
         ].join(' ')}
       >
         {rank}
@@ -537,7 +549,7 @@ function RankBadge({ rank }: { rank: number }) {
   }
 
   return (
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F5F1FB] text-sm font-semibold tabular-nums text-[#5B5468]">
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-inset text-sm font-semibold tabular-nums text-secondary">
       {rank}
     </span>
   )
@@ -552,11 +564,14 @@ function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
 
   const logo = logoUrl && logoUrl !== failedLogoUrl ? logoUrl : null
   const initial = name.charAt(0).toUpperCase()
+  const needsDarkLogoTreatment =
+    ['framer', 'github'].includes(name.trim().toLowerCase()) ||
+    /framerusercontent\.com|github\.com/i.test(logoUrl ?? '')
 
   return (
     <div
       aria-hidden="true"
-      className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#F5F1FB] text-sm font-bold text-[#4B2AAD] sm:h-11 sm:w-11"
+      className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-inset text-sm font-bold text-primary sm:h-11 sm:w-11"
     >
       {logo ? (
         <img
@@ -564,7 +579,10 @@ function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
           alt=""
           onError={() => setFailedLogoUrl(logo)}
           referrerPolicy="no-referrer"
-          className="h-full w-full object-contain"
+          className={[
+            'h-full w-full object-contain',
+            needsDarkLogoTreatment ? 'dark:brightness-0 dark:invert' : '',
+          ].join(' ')}
         />
       ) : (
         initial

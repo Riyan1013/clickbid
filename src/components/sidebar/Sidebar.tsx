@@ -59,8 +59,8 @@ function SidebarCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-[20px] border border-[#E7E1F2] bg-[#FCFBFA] p-5 shadow-[0_4px_16px_-8px_rgba(20,16,43,0.08)] sm:p-6">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-[#5B5468]">
+    <div className="rounded-[20px] border border-border bg-surface p-5 shadow-[0_4px_16px_-8px_rgba(20,16,43,0.08)] sm:p-6">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-secondary">
         {title}
       </h3>
       <div className="mt-4">{children}</div>
@@ -74,14 +74,14 @@ function HowItWorksCard() {
       <ol className="flex flex-col gap-4">
         {HOW_IT_WORKS_STEPS.map((step) => (
           <li key={step.number} className="flex items-start gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#4B2AAD14] text-xs font-bold tabular-nums text-[#4B2AAD]">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/8 text-xs font-bold tabular-nums text-primary">
               {step.number}
             </span>
             <div className="min-w-0">
-              <p className="text-sm font-semibold leading-tight text-[#14102B]">
+              <p className="text-sm font-semibold leading-tight text-ink">
                 {step.title}
               </p>
-              <p className="mt-0.5 text-xs leading-relaxed text-[#5B5468]">
+              <p className="mt-0.5 text-xs leading-relaxed text-secondary">
                 {step.description}
               </p>
             </div>
@@ -162,24 +162,24 @@ function TopClickedCard() {
             <li key={site.id} className="flex items-center gap-3">
               <ProductMark name={site.name} logoUrl={site.logoUrl} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold leading-tight text-[#14102B]">
+                <p className="truncate text-sm font-semibold leading-tight text-ink">
                   {site.name}
                 </p>
-                <p className="truncate text-xs text-[#9B94A8]">{site.domain}</p>
+                <p className="truncate text-xs text-muted">{site.domain}</p>
               </div>
-              <p className="shrink-0 text-xs font-medium tabular-nums text-[#5B5468]">
+              <p className="shrink-0 text-xs font-medium tabular-nums text-secondary">
                 {site.clicks.toLocaleString()} clicks
               </p>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-[#9B94A8]">No clicks tracked yet.</p>
+        <p className="text-xs text-muted">No clicks tracked yet.</p>
       )}
 
       <Link
         href="/clicks"
-        className="mt-6 flex w-full items-center justify-center rounded-full border border-[#E7E1F2] bg-white px-5 py-3 text-sm font-semibold text-[#14102B] transition-colors duration-150 hover:bg-[#F5F1FB]"
+        className="mt-6 flex w-full items-center justify-center rounded-full border border-border bg-surface px-5 py-3 text-sm font-semibold text-ink transition-colors duration-150 hover:bg-inset"
       >
         Show all clicks
       </Link>
@@ -200,11 +200,13 @@ function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
 
   const logo = logoUrl && logoUrl !== failedLogoUrl ? logoUrl : null
   const initial = name.charAt(0).toUpperCase()
+  const needsDarkLogoTreatment =
+    name.toLowerCase() === 'framer' || name.toLowerCase() === 'github'
 
   return (
     <div
       aria-hidden="true"
-      className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F5F1FB] text-xs font-bold text-[#4B2AAD]"
+      className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-inset text-xs font-bold text-primary"
     >
       {logo ? (
         <img
@@ -212,7 +214,10 @@ function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
           alt=""
           onError={() => setFailedLogoUrl(logo)}
           referrerPolicy="no-referrer"
-          className="h-full w-full object-contain"
+          className={[
+            'h-full w-full object-contain',
+            needsDarkLogoTreatment ? 'dark:brightness-0 dark:invert' : '',
+          ].join(' ')}
         />
       ) : (
         initial
@@ -223,12 +228,12 @@ function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
 
 function WhyClickBidCard() {
   return (
-    <div className="rounded-[20px] border border-[#E7E1F2] bg-[#F5F1FB] p-5 sm:p-6">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-[#5B5468]">
+    <div className="rounded-[20px] border border-border bg-inset p-5 sm:p-6">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-secondary">
         Why ClickBid?
       </h3>
-      <div className="h-0.5 w-8 rounded-full bg-[#D4A73A]" aria-hidden="true" />
-      <p className="mt-3 text-sm font-medium leading-relaxed text-[#14102B]">
+      <div className="h-0.5 w-8 rounded-full bg-gold" aria-hidden="true" />
+      <p className="mt-3 text-sm font-medium leading-relaxed text-ink">
         Bid for visibility. Get discovered. Track the clicks.
       </p>
     </div>

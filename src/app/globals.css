@@ -1,8 +1,66 @@
 @import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cb-bg: #fcfbfa;
+  --cb-surface: #ffffff;
+  --cb-inset: #f5f1fb;
+  --cb-border: #e7e1f2;
+  --cb-ink: #14102b;
+  --cb-secondary: #5b5468;
+  --cb-muted: #9b94a8;
+  --cb-primary: #4b2aad;
+  --cb-primary-hover: #3d2189;
+  --cb-gold: #d4a73a;
+  --cb-success: #2fa36b;
+  --cb-danger: #e5544a;
+  --cb-on-primary: #ffffff;
+
+  --background: var(--cb-bg);
+  --foreground: var(--cb-ink);
+  color-scheme: light;
+}
+
+.dark {
+  --cb-bg: #0e0b18;
+  --cb-surface: #151124;
+  --cb-inset: #1f1938;
+  --cb-border: #2a2340;
+  --cb-ink: #f7f5fa;
+  --cb-secondary: #c4bed2;
+  --cb-muted: #918aa5;
+  --cb-primary: #8b6ff7;
+  --cb-primary-hover: #a08aff;
+  --cb-gold: #d4a73a;
+  --cb-success: #43c98a;
+  --cb-danger: #f06a60;
+  --cb-on-primary: #ffffff;
+
+  --background: var(--cb-bg);
+  --foreground: var(--cb-ink);
+  color-scheme: dark;
+}
+
+/* Tailwind v4: enable class-based dark mode instead of the media-query default */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Expose tokens as Tailwind utilities: bg-bg, bg-surface, bg-inset,
+   border-border, text-ink, text-secondary, text-muted, bg-primary,
+   text-primary, bg-primary-hover, bg-gold, text-gold, bg-success,
+   text-success, bg-danger, text-danger, text-on-primary, bg-on-primary */
+@theme inline {
+  --color-bg: var(--cb-bg);
+  --color-surface: var(--cb-surface);
+  --color-inset: var(--cb-inset);
+  --color-border: var(--cb-border);
+  --color-ink: var(--cb-ink);
+  --color-secondary: var(--cb-secondary);
+  --color-muted: var(--cb-muted);
+  --color-primary: var(--cb-primary);
+  --color-primary-hover: var(--cb-primary-hover);
+  --color-gold: var(--cb-gold);
+  --color-success: var(--cb-success);
+  --color-danger: var(--cb-danger);
+  --color-on-primary: var(--cb-on-primary);
 }
 
 * {
@@ -19,4 +77,7 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }

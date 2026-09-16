@@ -172,29 +172,27 @@ export function ClaimRank() {
       id="claim"
       className="px-4 pb-14 sm:px-6 md:px-10 lg:px-16 lg:pb-20"
     >
-      <div className="mx-auto max-w-[1200px] rounded-[20px] border border-[#E7E1F2] bg-[#F5F1FB] p-6 sm:p-8 lg:p-10">
+      <div className="mx-auto max-w-[1200px] rounded-[20px] border border-border bg-inset p-6 sm:p-8 lg:p-10">
         <div className="grid gap-10 lg:grid-cols-[5fr_7fr] lg:gap-12">
           {/* Left: context */}
           <div className="flex flex-col justify-center">
-            <h2 className="text-xl font-bold leading-tight text-[#14102B] sm:text-2xl">
+            <h2 className="text-xl font-bold leading-tight text-ink sm:text-2xl">
               Claim your place.
             </h2>
-            <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#5B5468] sm:text-[15px]">
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-secondary sm:text-[15px]">
               Submit your product, choose a category, and bid your way onto the
               board.
             </p>
 
-            <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-[#4B2AAD] sm:text-sm">
+            <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary sm:text-sm">
               <InfoIcon />
               Your rank is determined by your bid.
             </p>
 
             {/* Existing-domain / new-domain bid status */}
-            <div className="mt-6 border-t border-[#E7E1F2] pt-5">
+            <div className="mt-6 border-t border-border pt-5">
               {isLoadingListings ? (
-                <p className="text-xs text-[#9B94A8]">
-                  Checking current listings…
-                </p>
+                <p className="text-xs text-muted">Checking current listings…</p>
               ) : !domain ? (
                 <p className="text-xs text-[#9B94A8]">
                   Enter a domain to see its current bid status.
@@ -203,7 +201,7 @@ export function ClaimRank() {
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                   <div>
                     <p className="text-xs text-[#9B94A8]">Current total bid</p>
-                    <p className="text-base font-semibold tabular-nums text-[#14102B]">
+                    <p className="text-base font-semibold tabular-nums text-ink">
                       ${existingListing.amount.toLocaleString()}
                     </p>
                   </div>
@@ -254,13 +252,13 @@ export function ClaimRank() {
                 value={productUrl}
                 onChange={(event) => setProductUrl(event.target.value)}
                 placeholder="yourproduct.com"
-                className="h-11 w-full rounded-xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 text-sm text-[#14102B] outline-none transition-shadow duration-150 placeholder:text-[#9B94A8] focus:border-[#4B2AAD] focus:ring-2 focus:ring-[#4B2AAD33] sm:h-12"
+                className="h-11 w-full rounded-xl border border-border bg-surface px-4 text-sm text-ink outline-none transition-shadow duration-150 placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-12"
               />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <span className="mb-1.5 block text-xs font-medium text-[#5B5468]">
+                <span className="mb-1.5 block text-xs font-medium text-secondary">
                   Category
                 </span>
                 <CategorySelect value={categoryId} onChange={setCategoryId} />
@@ -269,12 +267,12 @@ export function ClaimRank() {
               <div>
                 <label
                   htmlFor="bid-amount"
-                  className="mb-1.5 block text-xs font-medium text-[#5B5468]"
+                  className="mb-1.5 block text-xs font-medium text-secondary"
                 >
                   Your bid
                 </label>
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#9B94A8]">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted">
                     ${' '}
                   </span>
                   <input
@@ -286,7 +284,7 @@ export function ClaimRank() {
                       setBidAmount(event.target.value.replace(/[^0-9]/g, ''))
                     }
                     placeholder="100"
-                    className="h-11 w-full rounded-xl border border-[#E7E1F2] bg-[#FCFBFA] pl-8 pr-4 text-base font-semibold tabular-nums text-[#14102B] outline-none transition-shadow duration-150 placeholder:font-normal placeholder:text-[#9B94A8] focus:border-[#4B2AAD] focus:ring-2 focus:ring-[#4B2AAD33] sm:h-12"
+                    className="h-11 w-full rounded-xl border border-border bg-surface pl-8 pr-4 text-base font-semibold tabular-nums text-ink outline-none transition-shadow duration-150 placeholder:font-normal placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-12"
                   />
                 </div>
                 <p className="mt-1.5 text-xs text-[#9B94A8]">
@@ -300,12 +298,12 @@ export function ClaimRank() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#4B2AAD] px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189] disabled:pointer-events-none disabled:opacity-60 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition-colors duration-150 hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-60 sm:w-auto"
               >
                 Claim Rank
                 <span aria-hidden="true">→</span>
               </button>
-              <p className="text-xs text-[#9B94A8]">
+              <p className="text-xs text-muted">
                 Payment will be handled securely at checkout.
               </p>
             </div>
@@ -315,9 +313,7 @@ export function ClaimRank() {
                 aria-live="polite"
                 className={[
                   'text-xs font-medium',
-                  feedback.type === 'error'
-                    ? 'text-[#B42318]'
-                    : 'text-[#4B2AAD]',
+                  feedback.type === 'error' ? 'text-danger' : 'text-primary',
                 ].join(' ')}
               >
                 {feedback.message}
@@ -429,17 +425,16 @@ export function CategorySelect({
         onClick={() => setIsOpen((open) => !open)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className="flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 text-left text-sm text-[#14102B] outline-none transition-shadow duration-150 focus:border-[#4B2AAD] focus:ring-2 focus:ring-[#4B2AAD33] sm:h-12"
+        className="flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-border bg-surface px-4 text-left text-sm text-ink outline-none transition-shadow duration-150 focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-12"
       >
         <span className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0 text-[#5B5468]">
+          <span className="shrink-0 text-secondary">
             <CategoryIcon id={selected?.id ?? 'other'} className="h-4 w-4" />
           </span>
           <span
-            className={[
-              'truncate',
-              selected ? 'text-[#14102B]' : 'text-[#9B94A8]',
-            ].join(' ')}
+            className={['truncate', selected ? 'text-ink' : 'text-muted'].join(
+              ' ',
+            )}
           >
             {selected ? selected.label : 'Choose a category'}
           </span>
@@ -450,7 +445,7 @@ export function CategorySelect({
       {isOpen && (
         <div
           role="listbox"
-          className="absolute left-0 top-[calc(100%+8px)] z-30 max-h-64 w-full overflow-y-auto rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] p-1.5 shadow-[0_16px_40px_-12px_rgba(20,16,43,0.22)]"
+          className="absolute left-0 top-[calc(100%+8px)] z-30 max-h-64 w-full overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 shadow-[0_16px_40px_-12px_rgba(20,16,43,0.22)]"
         >
           {CATEGORIES.map((category) => {
             const isActive = category.id === value
@@ -467,13 +462,11 @@ export function CategorySelect({
                 className={[
                   'flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm transition-colors duration-150',
                   isActive
-                    ? 'bg-[#4B2AAD14] text-[#4B2AAD] font-medium'
-                    : 'text-[#14102B] hover:bg-[#F5F1FB]',
+                    ? 'bg-primary/8 text-primary font-medium'
+                    : 'text-ink hover:bg-inset',
                 ].join(' ')}
               >
-                <span
-                  className={isActive ? 'text-[#4B2AAD]' : 'text-[#9B94A8]'}
-                >
+                <span className={isActive ? 'text-primary' : 'text-muted'}>
                   <CategoryIcon id={category.id} className="h-4 w-4" />
                 </span>
                 {category.label}
@@ -496,7 +489,7 @@ function ChevronIcon({ isOpen }: { isOpen: boolean }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
       className={[
-        'shrink-0 text-[#9B94A8] transition-transform duration-150',
+        'shrink-0 text-muted transition-transform duration-150',
         isOpen ? 'rotate-180' : 'rotate-0',
       ].join(' ')}
     >

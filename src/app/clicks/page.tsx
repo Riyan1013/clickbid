@@ -103,16 +103,16 @@ export default function ClicksPage() {
       <AppShell>
         <Header />
 
-        <main className="bg-[#FCFBFA] px-4 py-14 sm:px-6 sm:py-16 md:px-10 lg:px-16 lg:py-20">
+        <main className="bg-surface px-4 py-14 sm:px-6 sm:py-16 md:px-10 lg:px-16 lg:py-20">
           {/* Intro */}
           <div className="mx-auto max-w-[720px]">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#4B2AAD]">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
               Clicks
             </p>
-            <h1 className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-[#14102B] sm:text-[32px]">
+            <h1 className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-ink sm:text-[32px]">
               See who&apos;s getting attention.
             </h1>
-            <p className="mt-3 max-w-lg text-sm leading-relaxed text-[#5B5468] sm:text-base">
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-secondary sm:text-base">
               Show which websites are attracting the most attention on ClickBid.
             </p>
           </div>
@@ -123,12 +123,12 @@ export default function ClicksPage() {
               [0, 1, 2].map((placeholder) => (
                 <div
                   key={placeholder}
-                  className="h-32 animate-pulse rounded-[20px] border border-[#E7E1F2] bg-[#F5F1FB] sm:h-[124px]"
+                  className="h-32 animate-pulse rounded-[20px] border border-border bg-inset sm:h-[124px]"
                 />
               ))
             ) : error ? (
-              <div className="flex flex-col items-center gap-3 rounded-[20px] border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-10 text-center">
-                <p className="text-sm text-[#5B5468]">{error}</p>
+              <div className="flex flex-col items-center gap-3 rounded-[20px] border border-border bg-surface px-4 py-10 text-center">
+                <p className="text-sm text-secondary">{error}</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -143,17 +143,17 @@ export default function ClicksPage() {
                       )
                       .finally(() => setIsLoading(false))
                   }}
-                  className="rounded-xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-2 text-sm font-medium text-[#14102B] transition-colors duration-150 hover:bg-[#F5F1FB]"
+                  className="rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors duration-150 hover:bg-inset"
                 >
                   Try again
                 </button>
               </div>
             ) : listings.length === 0 ? (
-              <div className="rounded-[20px] border border-[#E7E1F2] bg-[#FCFBFA] px-6 py-14 text-center">
-                <p className="text-base font-semibold text-[#14102B]">
+              <div className="rounded-[20px] border border-border bg-surface px-6 py-14 text-center">
+                <p className="text-base font-semibold text-ink">
                   No listings yet
                 </p>
-                <p className="mt-1.5 text-sm text-[#5B5468]">
+                <p className="mt-1.5 text-sm text-secondary">
                   Sites appear here as they claim ranks and collect clicks.
                 </p>
               </div>
@@ -187,24 +187,33 @@ function ClickListingRow({
     CATEGORIES.find((category) => category.id === listing.categoryId)?.label ??
     'Other'
 
+  const cardTone =
+    rank === 1
+      ? 'bg-[#E8E2F3] dark:bg-[#2A2140]'
+      : rank === 2
+        ? 'bg-[#EEEAF6] dark:bg-[#252039]'
+        : rank === 3
+          ? 'bg-[#F3F0F8] dark:bg-[#211C33]'
+          : rank === 4
+            ? 'bg-[#F7F5FA] dark:bg-[#1D192B]'
+            : 'bg-[#FAF9FB] dark:bg-[#191525]'
+
   return (
     <a
       href={`/api/click/${listing.id}`}
       target="_blank"
       rel="noopener noreferrer"
       className={[
-        'group flex flex-col gap-4 rounded-[20px] border px-5 py-5 transition-colors duration-150 sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-6',
-        isTop
-          ? 'border-[#E7E1F2] bg-[#FBF7EC] hover:bg-[#F7EFD9]'
-          : 'border-[#E7E1F2] bg-[#F5F1FB] hover:bg-[#EDE7F7]',
+        'group flex flex-col gap-4 rounded-[20px] border border-border px-5 py-5 transition-colors duration-150 hover:brightness-95 dark:hover:brightness-110 sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-6',
+        cardTone,
       ].join(' ')}
     >
       {/* Rank + logo */}
       <div className="flex shrink-0 items-center gap-4">
         <span
           className={[
-            'w-8 shrink-0 text-lg font-bold tabular-nums text-[#4B2AAD]',
-            isTop ? 'text-xl text-[#D4A73A]' : '',
+            'w-8 shrink-0 text-lg font-bold tabular-nums text-primary',
+            isTop ? 'text-xl text-gold' : '',
           ].join(' ')}
         >
           #{rank}
@@ -215,14 +224,14 @@ function ClickListingRow({
 
       {/* Info */}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-semibold leading-tight text-[#14102B] sm:text-base">
+        <p className="truncate text-[15px] font-semibold leading-tight text-ink sm:text-base">
           {listing.name}
         </p>
-        <p className="mt-0.5 truncate text-xs text-[#5B5468] sm:text-sm">
+        <p className="mt-0.5 truncate text-xs text-secondary sm:text-sm">
           {listing.domain} &middot; {categoryLabel}
         </p>
         {listing.description && (
-          <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-[#5B5468]">
+          <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-secondary">
             {listing.description}
           </p>
         )}
@@ -230,12 +239,10 @@ function ClickListingRow({
 
       {/* Click count */}
       <div className="flex shrink-0 items-baseline gap-1.5 sm:flex-col sm:items-end sm:gap-0">
-        <span className="text-2xl font-bold leading-none tabular-nums text-[#4B2AAD] sm:text-[26px]">
+        <span className="text-2xl font-bold leading-none tabular-nums text-primary sm:text-[26px]">
           {(listing.clickCount ?? 0).toLocaleString()}
         </span>
-        <span className="text-xs font-medium text-[#9B94A8] sm:mt-1">
-          clicks
-        </span>
+        <span className="text-xs font-medium text-muted sm:mt-1">clicks</span>
       </div>
     </a>
   )
@@ -258,7 +265,7 @@ function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
   return (
     <div
       aria-hidden="true"
-      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#E7E1F2] bg-[#FFFFFF] text-base font-bold text-[#14102B] shadow-[0_1px_2px_rgba(20,16,43,0.06)]"
+      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-surface text-base font-bold text-ink shadow-[0_1px_2px_rgba(20,16,43,0.06)]"
     >
       {logo ? (
         <img

@@ -17,14 +17,26 @@ const FOOTER_LINKS = [
  */
 export function Footer() {
   return (
-    <footer className="border-t border-[#E7E1F2] bg-[#FCFBFA] px-4 py-10 sm:px-6 md:px-10 lg:px-16">
+    <footer className="border-t border-border bg-surface px-4 py-10 sm:px-6 md:px-10 lg:px-16">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
         {/* Brand + tagline */}
         <div className="max-w-xs">
           <Link href="/" className="inline-flex items-center gap-2">
-            <img src="/clickbid-logo.svg" alt="" className="h-12 w-auto" />
+            <div className="relative h-12 w-[180px] shrink-0">
+              <img
+                src="/clickbid-logo.svg"
+                alt="ClickBid"
+                className="absolute inset-0 h-full w-full scale-110 object-contain dark:hidden"
+              />
+              <img
+                src="/ClickBid_logo_dark2.svg"
+                alt="ClickBid"
+                className="absolute inset-0 hidden h-full w-full scale-200 object-contain dark:block"
+              />
+            </div>
           </Link>
-          <p className="mt-3 text-sm leading-relaxed text-[#5B5468]">
+
+          <p className="mt-3 text-sm leading-relaxed text-secondary">
             Bid for visibility. Get discovered. Track the clicks.
           </p>
         </div>
@@ -38,7 +50,7 @@ export function Footer() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-[#5B5468] transition-colors duration-150 hover:text-[#4B2AAD]"
+              className="text-sm font-medium text-secondary transition-colors duration-150 hover:text-primary"
             >
               {link.label}
             </Link>
@@ -47,8 +59,8 @@ export function Footer() {
       </div>
 
       {/* Copyright */}
-      <div className="mx-auto mt-8 max-w-[1200px] border-t border-[#E7E1F2] pt-6">
-        <p className="text-xs text-[#9B94A8]">
+      <div className="mx-auto mt-8 max-w-[1200px] border-t border-border pt-6">
+        <p className="text-xs text-muted">
           &copy; {new Date().getFullYear()} ClickBid. All rights reserved.
         </p>
       </div>

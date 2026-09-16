@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { Hero } from '@/components/featured/Hero'
 import { ClaimRank } from '@/components/featured/ClaimRank'
 import {

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+
 import { PageCanvas } from '@/components/layout/PageCanvas'
 import { AppShell } from '@/components/layout/AppShell'
 import { Header } from '@/components/layout/Header'
@@ -49,7 +50,7 @@ const LISTING_RULES: RuleItem[] = [
       "Submitting a domain that's already listed does not create a duplicate — it contributes an additional bid to that same listing.",
   },
   {
-    title: 'Categories describe, they don\u2019t rank',
+    title: 'Categories describe, they don’t rank',
     description:
       "The category chosen at submission helps people browse and filter the leaderboard, but it has no effect on a listing's overall rank.",
   },
@@ -97,13 +98,15 @@ export default function RulesPage() {
         <main className="px-4 py-16 sm:px-6 sm:py-20 md:px-10 lg:px-16 lg:py-24">
           {/* Intro */}
           <div className="mx-auto flex max-w-[720px] flex-col items-center text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#4B2AAD]">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
               ClickBid Rules
             </p>
-            <h1 className="mt-4 text-[32px] font-bold leading-tight tracking-tight text-[#14102B] sm:text-4xl">
+
+            <h1 className="mt-4 text-[32px] font-bold leading-tight tracking-tight text-ink sm:text-4xl">
               The rules are simple.
             </h1>
-            <p className="mt-4 max-w-md text-base leading-relaxed text-[#5B5468] sm:text-lg">
+
+            <p className="mt-4 max-w-md text-base leading-relaxed text-secondary sm:text-lg">
               ClickBid is a public leaderboard. Your bid amount determines where
               a listing ranks, and clicks measure how much attention it gets —
               the two are always kept separate.
@@ -122,16 +125,18 @@ export default function RulesPage() {
                 ))}
               </div>
 
-              <div className="mt-6 rounded-2xl border border-[#E7E1F2] bg-[#F5F1FB] px-5 py-4 sm:px-6">
-                <p className="text-xs font-medium uppercase tracking-wide text-[#9B94A8]">
+              <div className="mt-6 rounded-2xl border border-border bg-inset px-5 py-4 sm:px-6">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted">
                   Example
                 </p>
-                <p className="mt-2 text-lg font-bold tabular-nums text-[#14102B] sm:text-xl">
-                  $21,001 <span className="font-medium text-[#9B94A8]">+</span>{' '}
-                  $500 <span className="font-medium text-[#9B94A8]">=</span>{' '}
-                  <span className="text-[#4B2AAD]">$21,501</span>
+
+                <p className="mt-2 text-lg font-bold tabular-nums text-ink sm:text-xl">
+                  $21,001 <span className="font-medium text-muted">+</span> $500{' '}
+                  <span className="font-medium text-muted">=</span>{' '}
+                  <span className="text-primary">$21,501</span>
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-[#5B5468]">
+
+                <p className="mt-2 text-sm leading-relaxed text-secondary">
                   A listing already sitting at $21,001 receives a new $500 bid
                   and its total becomes $21,501 — its rank updates accordingly.
                 </p>
@@ -172,9 +177,10 @@ export default function RulesPage() {
                   <li key={item} className="flex items-start gap-2.5">
                     <span
                       aria-hidden="true"
-                      className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#4B2AAD]"
+                      className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
                     />
-                    <span className="text-sm leading-relaxed text-[#5B5468] sm:text-[15px]">
+
+                    <span className="text-sm leading-relaxed text-secondary sm:text-[15px]">
                       {item}
                     </span>
                   </li>
@@ -184,14 +190,15 @@ export default function RulesPage() {
 
             {/* Current status */}
             <section>
-              <h2 className="text-xl font-bold leading-tight text-[#14102B] sm:text-2xl">
+              <h2 className="text-xl font-bold leading-tight text-ink sm:text-2xl">
                 Current status
               </h2>
-              <div className="mt-4 rounded-2xl border border-[#4B2AAD33] bg-[#F5F1FB] p-5 sm:p-6">
-                <p className="text-sm leading-relaxed text-[#5B5468] sm:text-[15px]">
+
+              <div className="mt-4 rounded-2xl border border-primary/20 bg-inset p-5 sm:p-6">
+                <p className="text-sm leading-relaxed text-secondary sm:text-[15px]">
                   ClickBid is currently an early, functional MVP. Bidding,
                   ranking, listings, and click tracking are all live —{' '}
-                  <span className="font-semibold text-[#14102B]">
+                  <span className="font-semibold text-ink">
                     but payment processing is not active yet.
                   </span>{' '}
                   Final commercial details, including how payments are
@@ -199,20 +206,6 @@ export default function RulesPage() {
                 </p>
               </div>
             </section>
-          </div>
-
-          {/* CTA */}
-          <div className="mx-auto mt-16 flex max-w-[720px] flex-col items-center rounded-[20px] border border-[#E7E1F2] bg-[#F5F1FB] px-6 py-10 text-center sm:mt-20 sm:px-10 sm:py-12 lg:mt-24">
-            <h2 className="text-xl font-bold leading-tight text-[#14102B] sm:text-2xl">
-              Ready to claim your rank?
-            </h2>
-            <Link
-              href="/claim"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#4B2AAD] px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189]"
-            >
-              Claim your rank
-              <span aria-hidden="true">→</span>
-            </Link>
           </div>
         </main>
 
@@ -233,12 +226,14 @@ function RuleSection({
 }) {
   return (
     <section>
-      <h2 className="text-xl font-bold leading-tight text-[#14102B] sm:text-2xl">
+      <h2 className="text-xl font-bold leading-tight text-ink sm:text-2xl">
         {title}
       </h2>
-      <p className="mt-1.5 text-sm leading-relaxed text-[#5B5468] sm:text-[15px]">
+
+      <p className="mt-1.5 text-sm leading-relaxed text-secondary sm:text-[15px]">
         {description}
       </p>
+
       <div className="mt-5">{children}</div>
     </section>
   )
@@ -246,11 +241,12 @@ function RuleSection({
 
 function RuleRow({ title, description }: RuleItem) {
   return (
-    <div className="rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] px-5 py-4 sm:px-6">
-      <p className="text-[15px] font-semibold leading-tight text-[#14102B]">
+    <div className="rounded-2xl border border-border bg-surface px-5 py-4 sm:px-6">
+      <p className="text-[15px] font-semibold leading-tight text-ink">
         {title}
       </p>
-      <p className="mt-1 text-sm leading-relaxed text-[#5B5468]">
+
+      <p className="mt-1 text-sm leading-relaxed text-secondary">
         {description}
       </p>
     </div>

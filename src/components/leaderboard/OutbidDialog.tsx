@@ -28,8 +28,7 @@ type SubmitFeedback = {
  * displayed period (all-time cumulative amount, or today's summed
  * bid contributions), so the existing-domain side of the math uses
  * the SAME period — the listing's all-time amount, or its total of
- * today's bids. A Today target is never compared against an
- * all-time total.
+ * today's bids. A Today target is never compared against an all-time total.
  *
  * Submits through the same submitBid() as ClaimRank — one bidding
  * system, two entry points. The amount passed to submitBid() is
@@ -203,23 +202,24 @@ export function OutbidDialog({
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0 bg-[#14102B66] backdrop-blur-[2px]"
+        className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]"
       />
 
       {/* Panel — bottom sheet on mobile, centered card on desktop */}
-      <div className="relative z-10 max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-[#E7E1F2] bg-[#FCFBFA] p-6 shadow-[0_24px_64px_-16px_rgba(20,16,43,0.35)] sm:rounded-3xl sm:p-7">
+      <div className="relative z-10 max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-border bg-surface p-6 shadow-[0_24px_64px_-16px_rgba(20,16,43,0.35)] sm:rounded-3xl sm:p-7">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3
               id="outbid-title"
-              className="text-lg font-bold leading-tight text-[#14102B] sm:text-xl"
+              className="text-lg font-bold leading-tight text-ink sm:text-xl"
             >
               Outbid rank #{target.rank}
             </h3>
-            <p className="mt-1 text-xs text-[#5B5468] sm:text-sm">
+
+            <p className="mt-1 text-xs text-secondary sm:text-sm">
               Minimum to take this rank:{' '}
-              <span className="font-semibold tabular-nums text-[#4B2AAD]">
+              <span className="font-semibold tabular-nums text-primary">
                 ${requiredAmount.toLocaleString()}
               </span>
             </p>
@@ -229,36 +229,37 @@ export function OutbidDialog({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#9B94A8] transition-colors duration-150 hover:bg-[#F5F1FB] hover:text-[#14102B]"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
           >
             <CloseIcon />
           </button>
         </div>
 
-        {/* Read-only target context — the clicked listing is never
-            copied into the form; it only anchors rank + required
-            amount */}
-        <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-[#F5F1FB] px-4 py-3">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#4B2AAD] text-xs font-bold text-white">
+        {/* Read-only target context */}
+        <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-inset px-4 py-3">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-on-primary">
             {target.rank}
           </span>
-          <p className="min-w-0 truncate text-sm font-semibold text-[#14102B]">
+
+          <p className="min-w-0 truncate text-sm font-semibold text-ink">
             {target.name}
           </p>
-          <p className="ml-auto shrink-0 text-sm font-semibold tabular-nums text-[#5B5468]">
+
+          <p className="ml-auto shrink-0 text-sm font-semibold tabular-nums text-secondary">
             ${target.amount.toLocaleString()}
           </p>
         </div>
 
-        {/* Form — same primitives/styles as ClaimRank */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
           <div>
             <label
               htmlFor="outbid-domain"
-              className="mb-1.5 block text-xs font-medium text-[#5B5468]"
+              className="mb-1.5 block text-xs font-medium text-secondary"
             >
               Your domain
             </label>
+
             <input
               id="outbid-domain"
               type="text"
@@ -266,76 +267,80 @@ export function OutbidDialog({
               onChange={(event) => setProductUrl(event.target.value)}
               placeholder="yourproduct.com"
               autoFocus
-              className="h-11 w-full rounded-xl border border-[#E7E1F2] bg-[#FFFFFF] px-4 text-sm text-[#14102B] outline-none transition-shadow duration-150 placeholder:text-[#9B94A8] focus:border-[#4B2AAD] focus:ring-2 focus:ring-[#4B2AAD33] sm:h-12"
+              className="h-11 w-full rounded-xl border border-border bg-surface px-4 text-sm text-ink outline-none transition-shadow duration-150 placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-12"
             />
           </div>
 
           <div>
-            <span className="mb-1.5 block text-xs font-medium text-[#5B5468]">
+            <span className="mb-1.5 block text-xs font-medium text-secondary">
               Category
             </span>
+
             <CategorySelect value={categoryId} onChange={setCategoryId} />
           </div>
 
           <div>
-            <span className="mb-1.5 block text-xs font-medium text-[#5B5468]">
+            <span className="mb-1.5 block text-xs font-medium text-secondary">
               Amount
             </span>
-            <div className="flex h-11 items-center rounded-xl border border-[#E7E1F2] bg-[#F5F1FB] px-4 sm:h-12">
-              <span className="text-base font-bold tabular-nums text-[#14102B]">
+
+            <div className="flex h-11 items-center rounded-xl border border-border bg-inset px-4 sm:h-12">
+              <span className="text-base font-bold tabular-nums text-ink">
                 ${requiredAmount.toLocaleString()}
               </span>
             </div>
-            <p className="mt-1.5 text-xs text-[#9B94A8]">
+
+            <p className="mt-1.5 text-xs text-muted">
               Fixed — the minimum needed to take rank #{target.rank}.
             </p>
           </div>
 
           {/* Existing-domain status */}
           {isLoadingListings ? (
-            <p className="text-xs text-[#9B94A8]">Checking current listings…</p>
+            <p className="text-xs text-muted">Checking current listings…</p>
           ) : !domain ? null : existingListing ? (
-            <div className="rounded-xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-3">
+            <div className="rounded-xl border border-border bg-surface px-4 py-3">
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                 <div>
-                  <p className="text-xs text-[#9B94A8]">Current total bid</p>
-                  <p className="text-base font-semibold tabular-nums text-[#14102B]">
+                  <p className="text-xs text-muted">Current total bid</p>
+
+                  <p className="text-base font-semibold tabular-nums text-ink">
                     ${currentTotal.toLocaleString()}
                   </p>
                 </div>
+
                 <div>
-                  <p className="text-xs text-[#9B94A8]">
-                    New total after your bid
-                  </p>
-                  <p className="text-base font-semibold tabular-nums text-[#14102B]">
+                  <p className="text-xs text-muted">New total after your bid</p>
+
+                  <p className="text-base font-semibold tabular-nums text-ink">
                     ${(currentTotal + contribution).toLocaleString()}
                   </p>
                 </div>
               </div>
 
               {alreadyMeetsRequirement ? (
-                <p className="mt-2 text-xs font-medium text-[#4B2AAD]">
+                <p className="mt-2 text-xs font-medium text-primary">
                   This domain already meets the required amount — no bid needed.
                 </p>
               ) : (
-                <p className="mt-2 text-xs font-medium text-[#4B2AAD]">
+                <p className="mt-2 text-xs font-medium text-primary">
                   Your contribution:{' '}
                   <span className="font-semibold tabular-nums">
                     ${contribution.toLocaleString()}
                   </span>{' '}
-                  <span className="font-normal text-[#9B94A8]">
+                  <span className="font-normal text-muted">
                     (${requiredAmount.toLocaleString()} required − ${' '}
                     {currentTotal.toLocaleString()} existing)
                   </span>
                 </p>
               )}
 
-              <p className="mt-1 text-xs text-[#9B94A8]">
+              <p className="mt-1 text-xs text-muted">
                 This domain is already listed — your bid adds to its total.
               </p>
             </div>
           ) : (
-            <p className="text-xs text-[#9B94A8]">
+            <p className="text-xs text-muted">
               New domain — your bid becomes its starting total of ${' '}
               {requiredAmount.toLocaleString()}.
             </p>
@@ -348,7 +353,7 @@ export function OutbidDialog({
               alreadyMeetsRequirement ||
               feedback?.type === 'success'
             }
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#4B2AAD] px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189] disabled:pointer-events-none disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition-colors duration-150 hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-60"
           >
             {isSubmitting
               ? 'Submitting…'
@@ -362,7 +367,7 @@ export function OutbidDialog({
               aria-live="polite"
               className={[
                 'text-xs font-medium',
-                feedback.type === 'error' ? 'text-[#B42318]' : 'text-[#4B2AAD]',
+                feedback.type === 'error' ? 'text-danger' : 'text-primary',
               ].join(' ')}
             >
               {feedback.message}
@@ -375,8 +380,7 @@ export function OutbidDialog({
 }
 
 /**
- * Local copy of ClaimRank's normalizeDomain (not exported there yet —
- * consolidate in the shared-exports step).
+ * Local copy of ClaimRank's normalizeDomain.
  */
 function normalizeDomain(input: string) {
   return input
@@ -387,9 +391,7 @@ function normalizeDomain(input: string) {
 }
 
 /**
- * Local copy of ClaimRank's fetchListingMetadata — best-effort
- * server-side metadata lookup; any failure falls back to the bare
- * domain so the bid is never blocked.
+ * Local copy of ClaimRank's fetchListingMetadata.
  */
 async function fetchListingMetadata(domain: string) {
   const fallback = {
@@ -427,9 +429,7 @@ async function fetchListingMetadata(domain: string) {
 }
 
 /**
- * Local copy of ClaimRank's CategorySelect (not exported there yet —
- * consolidate in the shared-exports step). Uses the shared
- * @/lib/categories + @/lib/CategoryIcon underneath.
+ * Local copy of ClaimRank's CategorySelect.
  */
 function CategorySelect({
   value,
@@ -449,13 +449,16 @@ function CategorySelect({
         setIsOpen(false)
       }
     }
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         setIsOpen(false)
       }
     }
+
     document.addEventListener('mousedown', handlePointerDown)
     document.addEventListener('keydown', handleKeyDown)
+
     return () => {
       document.removeEventListener('mousedown', handlePointerDown)
       document.removeEventListener('keydown', handleKeyDown)
@@ -469,31 +472,33 @@ function CategorySelect({
         onClick={() => setIsOpen((open) => !open)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className="flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 text-left text-sm text-[#14102B] outline-none transition-shadow duration-150 focus:border-[#4B2AAD] focus:ring-2 focus:ring-[#4B2AAD33] sm:h-12"
+        className="flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-border bg-surface px-4 text-left text-sm text-ink outline-none transition-shadow duration-150 focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-12"
       >
         <span className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0 text-[#5B5468]">
+          <span className="shrink-0 text-secondary">
             <CategoryIcon id={selected?.id ?? 'other'} className="h-4 w-4" />
           </span>
+
           <span
-            className={[
-              'truncate',
-              selected ? 'text-[#14102B]' : 'text-[#9B94A8]',
-            ].join(' ')}
+            className={['truncate', selected ? 'text-ink' : 'text-muted'].join(
+              ' ',
+            )}
           >
             {selected ? selected.label : 'Choose a category'}
           </span>
         </span>
+
         <ChevronIcon isOpen={isOpen} />
       </button>
 
       {isOpen && (
         <div
           role="listbox"
-          className="absolute left-0 top-[calc(100%+8px)] z-30 max-h-64 w-full overflow-y-auto rounded-2xl border border-[#E7E1F2] bg-[#FCFBFA] p-1.5 shadow-[0_16px_40px_-12px_rgba(20,16,43,0.22)]"
+          className="absolute left-0 top-[calc(100%+8px)] z-30 max-h-64 w-full overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 shadow-[0_16px_40px_-12px_rgba(20,16,43,0.22)]"
         >
           {CATEGORIES.map((category) => {
             const isActive = category.id === value
+
             return (
               <button
                 key={category.id}
@@ -507,15 +512,14 @@ function CategorySelect({
                 className={[
                   'flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm transition-colors duration-150',
                   isActive
-                    ? 'bg-[#4B2AAD14] text-[#4B2AAD] font-medium'
-                    : 'text-[#14102B] hover:bg-[#F5F1FB]',
+                    ? 'bg-primary/8 text-primary font-medium'
+                    : 'text-ink hover:bg-inset',
                 ].join(' ')}
               >
-                <span
-                  className={isActive ? 'text-[#4B2AAD]' : 'text-[#9B94A8]'}
-                >
+                <span className={isActive ? 'text-primary' : 'text-muted'}>
                   <CategoryIcon id={category.id} className="h-4 w-4" />
                 </span>
+
                 {category.label}
               </button>
             )
@@ -536,7 +540,7 @@ function ChevronIcon({ isOpen }: { isOpen: boolean }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
       className={[
-        'shrink-0 text-[#9B94A8] transition-transform duration-150',
+        'shrink-0 text-muted transition-transform duration-150',
         isOpen ? 'rotate-180' : 'rotate-0',
       ].join(' ')}
     >

@@ -37,15 +37,15 @@ export function Hero({
             isMounted ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0',
           ].join(' ')}
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#4B2AAD]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
             The internet&apos;s competitive leaderboard
           </p>
 
-          <h1 className="mt-4 text-[40px] font-bold leading-[1.05] tracking-tight text-[#14102B] sm:text-5xl lg:text-[56px]">
+          <h1 className="mt-4 text-[40px] font-bold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-[56px]">
             Claim your rank.
           </h1>
 
-          <p className="mt-5 max-w-md text-base leading-relaxed text-[#5B5468] sm:text-lg">
+          <p className="mt-5 max-w-md text-base leading-relaxed text-secondary sm:text-lg">
             Put your product in the spotlight. Bid higher, climb the
             leaderboard, and claim your place.
           </p>
@@ -53,7 +53,7 @@ export function Hero({
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
             <a
               href="#claim"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#4B2AAD] px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#3D2189]"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition-colors duration-150 hover:bg-primary-hover"
             >
               Claim your rank
               <span aria-hidden="true">→</span>
@@ -61,7 +61,7 @@ export function Hero({
 
             <Link
               href="/rules"
-              className="text-sm font-medium text-[#5B5468] underline decoration-[#E7E1F2] underline-offset-4 transition-colors duration-150 hover:text-[#4B2AAD]"
+              className="text-sm font-medium text-secondary underline decoration-border underline-offset-4 transition-colors duration-150 hover:text-primary"
             >
               Rules
             </Link>
@@ -79,12 +79,13 @@ export function Hero({
           {/* Subtle gold ambient glow behind the card */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 -z-10 translate-y-4 scale-95 rounded-[28px] bg-[#D4A73A] opacity-[0.08] blur-3xl"
+            className="pointer-events-none absolute inset-0 -z-10 translate-y-4 scale-95 rounded-[28px] bg-gold opacity-[0.08] blur-3xl"
           />
+
           {/* Subtle violet ambient glow behind the card */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 -z-10 translate-y-8 scale-95 rounded-[28px] bg-[#4B2AAD] opacity-[0.06] blur-3xl"
+            className="pointer-events-none absolute inset-0 -z-10 translate-y-8 scale-95 rounded-[28px] bg-primary opacity-[0.06] blur-3xl"
           />
 
           <FeaturedCard timeFilter={timeFilter} todayTotals={todayTotals} />
@@ -175,10 +176,10 @@ function FeaturedCard({
   const data = featured ?? FALLBACK_FEATURED
 
   return (
-    <div className="mx-auto w-full max-w-[420px] rounded-[24px] border border-[#4B2AAD1F] bg-[#FCFBFA] p-6 shadow-[0_20px_48px_-16px_rgba(75,42,173,0.28)] transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_28px_60px_-16px_rgba(75,42,173,0.34)] sm:p-7">
+    <div className="mx-auto w-full max-w-[420px] rounded-[24px] border-2 border-primary/20 bg-surface p-6 shadow-[0_20px_48px_-16px_rgba(75,42,173,0.28)] transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_28px_60px_-16px_rgba(75,42,173,0.34)] sm:p-7">
       {/* Winner badge */}
       <div className="flex items-center justify-between">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#D4A73A1A] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#8A6A22]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#8A6A22]">
           <CrownIcon />
           #1 Leader
         </span>
@@ -187,30 +188,33 @@ function FeaturedCard({
       {/* Product identity */}
       <div className="mt-5 flex items-center gap-3">
         <ProductMark name={data.name} logoUrl={data.logoUrl} />
+
         <div>
-          <p className="text-lg font-semibold leading-tight text-[#14102B]">
+          <p className="text-lg font-semibold leading-tight text-ink">
             {data.name}
           </p>
-          <p className="text-sm text-[#9B94A8]">{data.domain}</p>
+
+          <p className="text-sm text-muted">{data.domain}</p>
         </div>
       </div>
 
       {/* Category pill */}
       <div className="mt-4">
-        <span className="inline-flex items-center rounded-full bg-[#4B2AAD14] px-3 py-1 text-xs font-medium text-[#4B2AAD]">
+        <span className="inline-flex items-center rounded-full bg-primary/8 px-3 py-1 text-xs font-medium text-primary">
           {data.categoryLabel}
         </span>
       </div>
 
       {/* Stats: current bid + clicks */}
-      <div className="mt-6 border-t border-[#E7E1F2] pt-5">
+      <div className="mt-6 border-t border-border pt-5">
         <div className="flex items-stretch gap-3">
           {/* Bid */}
-          <div className="min-w-0 flex-1 rounded-xl bg-[#F5F1FB] px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9B94A8]">
+          <div className="min-w-0 flex-1 rounded-xl bg-inset px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
               Current bid
             </p>
-            <p className="mt-1 text-[26px] font-bold tabular-nums leading-none text-[#14102B] sm:text-[30px]">
+
+            <p className="mt-1 text-[26px] font-bold tabular-nums leading-none text-ink sm:text-[30px]">
               ${data.amount.toLocaleString()}
             </p>
           </div>
@@ -218,13 +222,14 @@ function FeaturedCard({
           {/* Clicks — navigates to /clicks */}
           <Link
             href="/clicks"
-            className="group flex min-w-0 flex-1 flex-col justify-between rounded-xl border border-[#E7E1F2] bg-[#FCFBFA] px-4 py-3 transition-colors duration-150 hover:border-[#4B2AAD] hover:bg-[#F5F1FB]"
+            className="group flex min-w-0 flex-1 flex-col justify-between rounded-xl border border-border bg-surface px-4 py-3 transition-colors duration-150 hover:border-primary hover:bg-inset"
           >
-            <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9B94A8] transition-colors duration-150 group-hover:text-[#4B2AAD]">
+            <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted transition-colors duration-150 group-hover:text-primary">
               Clicks
               <span aria-hidden="true">→</span>
             </p>
-            <p className="mt-1 text-[26px] font-bold tabular-nums leading-none text-[#4B2AAD] transition-colors duration-150 group-hover:text-[#3D2189] sm:text-[30px]">
+
+            <p className="mt-1 text-[26px] font-bold tabular-nums leading-none text-primary transition-colors duration-150 group-hover:text-primary-hover sm:text-[30px]">
               {data.clickCount.toLocaleString()}
             </p>
           </Link>
@@ -251,7 +256,7 @@ function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
   return (
     <div
       aria-hidden="true"
-      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#F5F1FB] text-base font-bold text-[#14102B]"
+      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-inset text-base font-bold text-ink"
     >
       {logo ? (
         <img
