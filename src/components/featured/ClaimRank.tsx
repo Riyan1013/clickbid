@@ -210,7 +210,7 @@ export function ClaimRank() {
                       <p className="text-xs text-[#9B94A8]">
                         New total after your bid
                       </p>
-                      <p className="text-base font-semibold tabular-nums text-[#14102B]">
+                      <p className="text-base font-semibold tabular-nums text-ink">
                         ${projectedTotal.toLocaleString()}
                       </p>
                     </div>

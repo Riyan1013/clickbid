@@ -170,6 +170,17 @@ export function Header({ visitorsToday = 0 }: { visitorsToday?: number }) {
               visitors today
             </span>
           </div>
+
+          {/* Divider */}
+          <span aria-hidden="true" className="h-4 w-px bg-border" />
+
+          {/* Statistics */}
+          <Link
+            href="/stats"
+            className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted transition-colors duration-150 hover:text-primary"
+          >
+            Statistics
+          </Link>
         </div>
 
         <ThemeToggle />
@@ -221,6 +232,18 @@ export function Header({ visitorsToday = 0 }: { visitorsToday?: number }) {
               today
             </span>
           </div>
+
+          {/* Divider */}
+          <span aria-hidden="true" className="h-3 w-px bg-border" />
+
+          {/* Statistics */}
+          <Link
+            href="/stats"
+            className="text-[9px] font-semibold uppercase tracking-[0.08em] text-muted transition-colors duration-150 hover:text-primary"
+          >
+            <span className="sm:hidden">Stats</span>
+            <span className="hidden sm:inline">Statistics</span>
+          </Link>
         </div>
 
         <ThemeToggle />
