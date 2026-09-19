@@ -1,16 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { ITEMS_PER_PAGE, Pagination } from './Pagination'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import { CategoryIcon } from '@/lib/CategoryIcon'
-import {
-  fetchLeaderboardListings,
-  fetchTodayBidTotals,
-  formatTimeAgo,
-  type LeaderboardListing,
-} from '@/lib/listings'
+import { formatTimeAgo, type LeaderboardListing } from '@/lib/listings'
 
 type FilterId = CategoryId | 'all'
 
@@ -43,93 +37,29 @@ export type OutbidTarget = {
  * max-width / centering.
  */
 export function Leaderboard({
+  listings,
+  todayTotals,
+  isLoading,
+  error,
+  onRetry,
   timeFilter,
   onTimeFilterChange,
-  todayTotals,
-  onTodayTotalsChange,
   onOutbid,
   onClaimRank,
 }: {
+  listings: LeaderboardListing[]
+  todayTotals: Map<string, number>
+  isLoading: boolean
+  error: string | null
+  onRetry: () => void
   timeFilter: TimeFilter
   onTimeFilterChange: (filter: TimeFilter) => void
-  todayTotals: Map<string, number>
-  onTodayTotalsChange: (totals: Map<string, number>) => void
   onOutbid?: (target: OutbidTarget) => void
   onClaimRank?: () => void
 }) {
   const [activeFilter, setActiveFilter] = useState<FilterId>('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const [listings, setListings] = useState<LeaderboardListing[]>([])
-
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [, setTimeTick] = useState(0)
-
-  useEffect(() => {
-    let isMounted = true
-
-    async function loadListings() {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const [data, totals] = await Promise.all([
-          fetchLeaderboardListings(),
-          fetchTodayBidTotals(),
-        ])
-
-        if (isMounted) {
-          setListings(data)
-          onTodayTotalsChange(totals)
-        }
-      } catch {
-        if (isMounted) {
-          setError("Couldn't load the leaderboard. Please try again.")
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    loadListings()
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('leaderboard-clicks')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'clicks',
-        },
-        (payload) => {
-          const listingId = payload.new.listing_id as string
-
-          setListings((currentListings) =>
-            currentListings.map((listing) =>
-              listing.id === listingId
-                ? {
-                    ...listing,
-                    clickCount: (listing.clickCount ?? 0) + 1,
-                  }
-                : listing,
-            ),
-          )
-        },
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -240,19 +170,7 @@ export function Leaderboard({
           <p className="text-sm text-secondary">{error}</p>
           <button
             type="button"
-            onClick={() => {
-              setIsLoading(true)
-              setError(null)
-              Promise.all([fetchLeaderboardListings(), fetchTodayBidTotals()])
-                .then(([data, totals]) => {
-                  setListings(data)
-                  onTodayTotalsChange(totals)
-                })
-                .catch(() =>
-                  setError("Couldn't load the leaderboard. Please try again."),
-                )
-                .finally(() => setIsLoading(false))
-            }}
+            onClick={onRetry}
             className="rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors duration-150 hover:bg-inset"
           >
             Try again

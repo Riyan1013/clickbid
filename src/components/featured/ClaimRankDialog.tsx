@@ -1,11 +1,7 @@
 'use client'
 
 import { useEffect, useState, type FormEvent } from 'react'
-import {
-  fetchLeaderboardListings,
-  submitBid,
-  type LeaderboardListing,
-} from '@/lib/listings'
+import { submitBid, type LeaderboardListing } from '@/lib/listings'
 import {
   CategorySelect,
   fetchListingMetadata,
@@ -19,17 +15,20 @@ type SubmitFeedback = {
 }
 
 export function ClaimRankDialog({
+  listings,
+  isLoading,
   isOpen,
   onClose,
 }: {
+  listings: LeaderboardListing[]
+  isLoading: boolean
   isOpen: boolean
   onClose: () => void
 }) {
   const [productUrl, setProductUrl] = useState('')
   const [categoryId, setCategoryId] = useState<CategoryId | null>(null)
   const [bidAmount, setBidAmount] = useState('')
-  const [listings, setListings] = useState<LeaderboardListing[]>([])
-  const [isLoadingListings, setIsLoadingListings] = useState(true)
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState<SubmitFeedback | null>(null)
 
@@ -43,28 +42,6 @@ export function ClaimRankDialog({
     setBidAmount('')
     setFeedback(null)
   }, [isOpen])
-
-  // Load current listings once, so an entered domain can be matched
-  // to its existing listing. Non-critical: on failure every domain is
-  // simply treated as new — it never blocks the actual bid flow.
-  useEffect(() => {
-    let isMounted = true
-
-    fetchLeaderboardListings()
-      .then((data) => {
-        if (isMounted) setListings(data)
-      })
-      .catch(() => {
-        // Silently degrade — see comment above.
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingListings(false)
-      })
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
 
   // Escape to close + lock body scroll while open.
   useEffect(() => {
@@ -259,7 +236,7 @@ export function ClaimRankDialog({
           </div>
 
           {/* Existing-domain / new-domain status */}
-          {isLoadingListings ? (
+          {isLoading ? (
             <p className="text-xs text-muted">Checking current listings…</p>
           ) : !domain ? null : existingListing ? (
             <div className="rounded-xl border border-border bg-inset px-4 py-3">

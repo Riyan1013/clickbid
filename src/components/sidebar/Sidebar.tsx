@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { fetchLeaderboardListings } from '@/lib/listings'
+import type { LeaderboardListing } from '@/lib/listings'
 import { supabase } from '@/lib/supabase'
 
 type TopClickedSite = {
@@ -41,12 +41,12 @@ const HOW_IT_WORKS_STEPS = [
  * page.tsx, and to stack full-width below the leaderboard on smaller
  * screens (the stacking itself is handled by that parent grid).
  */
-export function Sidebar() {
+export function Sidebar({ listings }: { listings: LeaderboardListing[] }) {
   return (
     <aside className="flex flex-col gap-6 lg:sticky lg:top-24">
       <HowItWorksCard />
-      <StatisticsCard />
-      <TopClickedCard />
+      <StatisticsCard listings={listings} />
+      <TopClickedCard listings={listings} />
       <WhyClickBidCard />
     </aside>
   )
@@ -109,39 +109,13 @@ type SidebarStats = {
  * stay current without refetching on every event. Each value shows
  * "—" while loading or after a failed fetch — never demo numbers.
  */
-function StatisticsCard() {
-  const [stats, setStats] = useState<SidebarStats | null>(null)
+function StatisticsCard({ listings }: { listings: LeaderboardListing[] }) {
   const [onlineNow, setOnlineNow] = useState<number | null>(null)
 
+  // Online visitors — this card's own query + 60s poll.
   useEffect(() => {
     let isMounted = true
 
-    async function loadStats() {
-      try {
-        const listings = await fetchLeaderboardListings()
-
-        if (isMounted) {
-          setStats({
-            totalListings: listings.length,
-            totalBidValue: listings.reduce(
-              (sum, listing) => sum + listing.amount,
-              0,
-            ),
-            totalClicks: listings.reduce(
-              (sum, listing) => sum + (listing.clickCount ?? 0),
-              0,
-            ),
-            activeCategories: new Set(
-              listings.map((listing) => listing.categoryId),
-            ).size,
-          })
-        }
-      } catch {
-        // Fetch failed — keep "—" placeholders.
-      }
-    }
-
-    // Same query + 5-minute window as the Header's online counter.
     async function loadOnlineNow() {
       const { count, error } = await supabase
         .from('online_visitors')
@@ -149,22 +123,31 @@ function StatisticsCard() {
         .gte('last_seen', new Date(Date.now() - 5 * 60 * 1000).toISOString())
 
       if (!isMounted || error) return
+
       setOnlineNow(count ?? 0)
     }
 
-    loadStats()
     loadOnlineNow()
 
-    const intervalId = setInterval(() => {
-      loadStats()
-      loadOnlineNow()
-    }, 60_000)
+    const intervalId = setInterval(loadOnlineNow, 60_000)
 
     return () => {
       isMounted = false
       clearInterval(intervalId)
     }
   }, [])
+
+  // Marketplace totals now come from the shared listings state.
+  const stats: SidebarStats = {
+    totalListings: listings.length,
+    totalBidValue: listings.reduce((sum, listing) => sum + listing.amount, 0),
+    totalClicks: listings.reduce(
+      (sum, listing) => sum + (listing.clickCount ?? 0),
+      0,
+    ),
+    activeCategories: new Set(listings.map((listing) => listing.categoryId))
+      .size,
+  }
 
   return (
     <SidebarCard title="Statistics">
@@ -178,6 +161,7 @@ function StatisticsCard() {
             </span>
             Online now
           </span>
+
           <span className="text-sm font-bold leading-none tabular-nums text-ink">
             {onlineNow === null ? '—' : onlineNow.toLocaleString()}
           </span>
@@ -185,14 +169,17 @@ function StatisticsCard() {
 
         {/* Marketplace totals */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-          <StatValue label="Listings" value={stats?.totalListings} />
+          <StatValue label="Listings" value={stats.totalListings} />
+
           <StatValue
             label="Bid value"
-            value={stats?.totalBidValue}
+            value={stats.totalBidValue}
             format="currency"
           />
-          <StatValue label="Clicks" value={stats?.totalClicks} />
-          <StatValue label="Active" value={stats?.activeCategories} />
+
+          <StatValue label="Clicks" value={stats.totalClicks} />
+
+          <StatValue label="Active" value={stats.activeCategories} />
         </div>
 
         <Link
@@ -240,59 +227,17 @@ function StatValue({
  * message when the fetch fails or the board is empty, so the
  * sidebar always renders.
  */
-function TopClickedCard() {
-  const [sites, setSites] = useState<TopClickedSite[]>([])
-
-  useEffect(() => {
-    let isMounted = true
-
-    async function loadTopClicked() {
-      try {
-        const listings = await fetchLeaderboardListings()
-
-        if (!isMounted) {
-          return
-        }
-
-        const topThree = [...listings]
-          .sort((a, b) => (b.clickCount ?? 0) - (a.clickCount ?? 0))
-          .slice(0, 3)
-          .map((listing) => ({
-            id: listing.id,
-            name: listing.name,
-            domain: listing.domain,
-            clicks: listing.clickCount ?? 0,
-            logoUrl: listing.logoUrl,
-          }))
-
-        setSites(topThree)
-      } catch {
-        // Fetch failed — keep the empty state.
-      }
-    }
-
-    loadTopClicked()
-
-    const channel = supabase
-      .channel('sidebar-top-clicked')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'clicks',
-        },
-        () => {
-          loadTopClicked()
-        },
-      )
-      .subscribe()
-
-    return () => {
-      isMounted = false
-      supabase.removeChannel(channel)
-    }
-  }, [])
+function TopClickedCard({ listings }: { listings: LeaderboardListing[] }) {
+  const sites: TopClickedSite[] = [...listings]
+    .sort((a, b) => (b.clickCount ?? 0) - (a.clickCount ?? 0))
+    .slice(0, 3)
+    .map((listing) => ({
+      id: listing.id,
+      name: listing.name,
+      domain: listing.domain,
+      clicks: listing.clickCount ?? 0,
+      logoUrl: listing.logoUrl,
+    }))
 
   return (
     <SidebarCard title="Top Clicked">

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { CATEGORIES } from '@/lib/categories'
-import { fetchLeaderboardListings } from '@/lib/listings'
+import type { LeaderboardListing } from '@/lib/listings'
 
 /**
  * Hero
@@ -14,9 +14,11 @@ import { fetchLeaderboardListings } from '@/lib/listings'
  * utilities driven by a mount-state toggle — no animation library.
  */
 export function Hero({
+  listings,
   timeFilter,
   todayTotals,
 }: {
+  listings: LeaderboardListing[]
   timeFilter: 'all-time' | 'today'
   todayTotals: Map<string, number>
 }) {
@@ -88,7 +90,11 @@ export function Hero({
             className="pointer-events-none absolute inset-0 -z-10 translate-y-8 scale-95 rounded-[28px] bg-primary opacity-[0.06] blur-3xl"
           />
 
-          <FeaturedCard timeFilter={timeFilter} todayTotals={todayTotals} />
+          <FeaturedCard
+            listings={listings}
+            timeFilter={timeFilter}
+            todayTotals={todayTotals}
+          />
         </div>
       </div>
     </section>
@@ -123,55 +129,46 @@ const FALLBACK_FEATURED: FeaturedCardData = {
  * the board is empty, so the hero always renders.
  */
 function FeaturedCard({
+  listings,
   timeFilter,
   todayTotals,
 }: {
+  listings: LeaderboardListing[]
   timeFilter: 'all-time' | 'today'
   todayTotals: Map<string, number>
 }) {
+  const top =
+    timeFilter === 'today'
+      ? listings
+          .filter((listing) => todayTotals.has(listing.id))
+          .map((listing) => ({
+            ...listing,
+            amount: todayTotals.get(listing.id) ?? 0,
+          }))
+          .sort((a, b) => b.amount - a.amount)[0]
+      : listings[0]
+
   const [featured, setFeatured] = useState<FeaturedCardData | null>(null)
+  const [featuredKey, setFeaturedKey] = useState<string | null>(null)
 
-  useEffect(() => {
-    let isMounted = true
-
-    async function loadFeatured() {
-      try {
-        const listings = await fetchLeaderboardListings()
-
-        const top =
-          timeFilter === 'today'
-            ? listings
-                .filter((listing) => todayTotals.has(listing.id))
-                .map((listing) => ({
-                  ...listing,
-                  amount: todayTotals.get(listing.id) ?? 0,
-                }))
-                .sort((a, b) => b.amount - a.amount)[0]
-            : listings[0]
-
-        if (isMounted && top) {
-          setFeatured({
-            name: top.name,
-            domain: top.domain,
-            categoryLabel:
-              CATEGORIES.find((item) => item.id === top.categoryId)?.label ??
-              'Other',
-            amount: top.amount,
-            clickCount: top.clickCount ?? 0,
-            logoUrl: top.logoUrl,
-          })
-        }
-      } catch {
-        // Fetch failed — keep the fallback card.
-      }
+  if (top) {
+    const next: FeaturedCardData = {
+      name: top.name,
+      domain: top.domain,
+      categoryLabel:
+        CATEGORIES.find((item) => item.id === top.categoryId)?.label ?? 'Other',
+      amount: top.amount,
+      clickCount: top.clickCount ?? 0,
+      logoUrl: top.logoUrl,
     }
 
-    loadFeatured()
+    const nextKey = `${next.name}|${next.domain}|${next.categoryLabel}|${next.amount}|${next.clickCount}|${next.logoUrl ?? ''}`
 
-    return () => {
-      isMounted = false
+    if (nextKey !== featuredKey) {
+      setFeaturedKey(nextKey)
+      setFeatured(next)
     }
-  }, [timeFilter, todayTotals])
+  }
 
   const data = featured ?? FALLBACK_FEATURED
 
@@ -237,6 +234,19 @@ function FeaturedCard({
       </div>
     </div>
   )
+}
+
+function toFeaturedCardData(listing: LeaderboardListing): FeaturedCardData {
+  return {
+    name: listing.name,
+    domain: listing.domain,
+    categoryLabel:
+      CATEGORIES.find((item) => item.id === listing.categoryId)?.label ??
+      'Other',
+    amount: listing.amount,
+    clickCount: listing.clickCount ?? 0,
+    logoUrl: listing.logoUrl,
+  }
 }
 
 /**

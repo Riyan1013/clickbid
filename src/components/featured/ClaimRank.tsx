@@ -1,11 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import {
-  submitBid,
-  fetchLeaderboardListings,
-  type LeaderboardListing,
-} from '@/lib/listings'
+import { submitBid, type LeaderboardListing } from '@/lib/listings'
 
 export type CategoryId =
   | 'ai-agents'
@@ -59,38 +55,18 @@ type SubmitFeedback = {
  * the section makes clear that bid amount alone determines placement.
  * No payment logic is wired up yet.
  */
-export function ClaimRank() {
+export function ClaimRank({
+  listings,
+  isLoading,
+}: {
+  listings: LeaderboardListing[]
+  isLoading: boolean
+}) {
   const [productUrl, setProductUrl] = useState('')
   const [categoryId, setCategoryId] = useState<CategoryId | null>(null)
   const [bidAmount, setBidAmount] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState<SubmitFeedback | null>(null)
-  const [listings, setListings] = useState<LeaderboardListing[]>([])
-  const [isLoadingListings, setIsLoadingListings] = useState(true)
-
-  // Load current listings once so we can tell whether the entered
-  // domain already exists and show its live total bid. Non-critical:
-  // if this fails, every domain is simply treated as new — it never
-  // blocks the actual bid submission flow below.
-
-  useEffect(() => {
-    let isMounted = true
-
-    fetchLeaderboardListings()
-      .then((data) => {
-        if (isMounted) setListings(data)
-      })
-      .catch(() => {
-        // Silently degrade — see comment above.
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingListings(false)
-      })
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
 
   const domain = normalizeDomain(productUrl)
   const existingListing = domain
@@ -191,7 +167,7 @@ export function ClaimRank() {
 
             {/* Existing-domain / new-domain bid status */}
             <div className="mt-6 border-t border-border pt-5">
-              {isLoadingListings ? (
+              {isLoading ? (
                 <p className="text-xs text-muted">Checking current listings…</p>
               ) : !domain ? (
                 <p className="text-xs text-[#9B94A8]">

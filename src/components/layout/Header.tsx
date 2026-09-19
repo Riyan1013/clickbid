@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { ClaimRankDialog } from '@/components/featured/ClaimRankDialog'
+
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 const NAV_LINKS = [
@@ -23,10 +23,13 @@ const NAV_LINKS = [
  */
 export function Header({ visitorsToday = 0 }: { visitorsToday?: number }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isClaimRankOpen, setIsClaimRankOpen] = useState(false)
 
   const [liveVisitorsToday, setLiveVisitorsToday] = useState(visitorsToday)
   const [onlineVisitors, setOnlineVisitors] = useState(0)
+
+  function openClaimRank() {
+    window.dispatchEvent(new Event('clickbid:open-claim-rank'))
+  }
 
   useEffect(() => {
     const startOfToday = new Date()
@@ -187,7 +190,7 @@ export function Header({ visitorsToday = 0 }: { visitorsToday?: number }) {
 
         <button
           type="button"
-          onClick={() => setIsClaimRankOpen(true)}
+          onClick={openClaimRank}
           className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-colors duration-150 hover:bg-primary-hover"
         >
           Claim Rank
@@ -250,7 +253,7 @@ export function Header({ visitorsToday = 0 }: { visitorsToday?: number }) {
 
         <button
           type="button"
-          onClick={() => setIsClaimRankOpen(true)}
+          onClick={openClaimRank}
           className="rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-on-primary transition-colors duration-150 hover:bg-primary-hover sm:px-4"
         >
           <span className="sm:hidden">Claim</span>
@@ -284,10 +287,6 @@ export function Header({ visitorsToday = 0 }: { visitorsToday?: number }) {
           </nav>
         </div>
       )}
-      <ClaimRankDialog
-        isOpen={isClaimRankOpen}
-        onClose={() => setIsClaimRankOpen(false)}
-      />
     </header>
   )
 }

@@ -3,12 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import { CategoryIcon } from '@/lib/CategoryIcon'
-import {
-  fetchLeaderboardListings,
-  fetchTodayBidTotals,
-  submitBid,
-  type LeaderboardListing,
-} from '@/lib/listings'
+import { submitBid, type LeaderboardListing } from '@/lib/listings'
 import type { OutbidTarget, TimeFilter } from './Leaderboard'
 
 type SubmitFeedback = {
@@ -42,17 +37,21 @@ type SubmitFeedback = {
 export function OutbidDialog({
   target,
   timeFilter,
+  listings,
+  todayTotals,
+  isLoading,
   onClose,
 }: {
   target: OutbidTarget | null
   timeFilter: TimeFilter
+  listings: LeaderboardListing[]
+  todayTotals: Map<string, number>
+  isLoading: boolean
   onClose: () => void
 }) {
   const [productUrl, setProductUrl] = useState('')
   const [categoryId, setCategoryId] = useState<CategoryId | null>(null)
-  const [listings, setListings] = useState<LeaderboardListing[]>([])
-  const [todayTotals, setTodayTotals] = useState<Map<string, number>>(new Map())
-  const [isLoadingListings, setIsLoadingListings] = useState(true)
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState<SubmitFeedback | null>(null)
 
@@ -67,32 +66,6 @@ export function OutbidDialog({
     setCategoryId(null)
     setFeedback(null)
   }, [target])
-
-  // Load listings + today's bid totals once, so an entered domain can
-  // be matched to its listing and its period total. Same non-critical
-  // degradation as ClaimRank: on failure every domain is treated as
-  // new — the suggested contribution then equals the full required
-  // amount, which can only overpay, never underqualify.
-  useEffect(() => {
-    let isMounted = true
-
-    Promise.all([fetchLeaderboardListings(), fetchTodayBidTotals()])
-      .then(([listingsData, totals]) => {
-        if (!isMounted) return
-        setListings(listingsData)
-        setTodayTotals(totals)
-      })
-      .catch(() => {
-        // Silently degrade — see comment above.
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingListings(false)
-      })
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
 
   // Escape to close + lock body scroll while open.
   useEffect(() => {
@@ -296,7 +269,7 @@ export function OutbidDialog({
           </div>
 
           {/* Existing-domain status */}
-          {isLoadingListings ? (
+          {isLoading ? (
             <p className="text-xs text-muted">Checking current listings…</p>
           ) : !domain ? null : existingListing ? (
             <div className="rounded-xl border border-border bg-surface px-4 py-3">
