@@ -115,6 +115,15 @@ export function ClaimRank({
     try {
       const metadata = await fetchListingMetadata(domain)
 
+      if (!metadata.verified) {
+        setFeedback({
+          type: 'error',
+          message:
+            "This domain couldn't be verified. Please enter a valid, reachable website domain.",
+        })
+        return
+      }
+
       await submitBid({
         domain,
         name: metadata.name,
@@ -199,12 +208,13 @@ export function ClaimRank({
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                   <div>
                     <p className="text-xs text-[#9B94A8]">Starting bid</p>
-                    <p className="text-base font-semibold tabular-nums text-[#14102B]">
+                    <p className="text-base font-semibold tabular-nums text-[#14102B] dark:text-white">
                       {enteredAmount > 0
                         ? `$${enteredAmount.toLocaleString()}`
                         : '—'}
                     </p>
                   </div>
+
                   <span className="text-xs text-[#9B94A8]">
                     New domain — your bid becomes its starting total.
                   </span>
@@ -326,6 +336,7 @@ export async function fetchListingMetadata(domain: string) {
     description: '',
     logoUrl: '',
     url: `https://${domain}`,
+    verified: false,
   }
 
   try {
@@ -349,6 +360,7 @@ export async function fetchListingMetadata(domain: string) {
       description: data.description ?? '',
       logoUrl: data.logoUrl ?? '',
       url: data.url || fallback.url,
+      verified: true,
     }
   } catch {
     return fallback

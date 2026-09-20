@@ -474,22 +474,15 @@ function RankBadge({ rank }: { rank: number }) {
 }
 
 function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
-  // Tracks *which* URL failed, so a broken logo falls back to the
-  // initial letter while a different URL arriving later (e.g. a new
-  // bid's metadata overwrote logo_url) is retried, not stuck on the
-  // fallback.
   const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null)
 
   const logo = logoUrl && logoUrl !== failedLogoUrl ? logoUrl : null
   const initial = name.charAt(0).toUpperCase()
-  const needsDarkLogoTreatment =
-    ['framer', 'github'].includes(name.trim().toLowerCase()) ||
-    /framerusercontent\.com|github\.com/i.test(logoUrl ?? '')
 
   return (
     <div
       aria-hidden="true"
-      className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-inset text-sm font-bold text-primary sm:h-11 sm:w-11"
+      className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#F5F1FB] text-sm font-bold text-primary sm:h-11 sm:w-11"
     >
       {logo ? (
         <img
@@ -497,10 +490,7 @@ function ProductMark({ name, logoUrl }: { name: string; logoUrl?: string }) {
           alt=""
           onError={() => setFailedLogoUrl(logo)}
           referrerPolicy="no-referrer"
-          className={[
-            'h-full w-full object-contain',
-            needsDarkLogoTreatment ? 'dark:brightness-0 dark:invert' : '',
-          ].join(' ')}
+          className="h-full w-full object-contain"
         />
       ) : (
         initial

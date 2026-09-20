@@ -104,6 +104,15 @@ export function ClaimRankDialog({
     try {
       const metadata = await fetchListingMetadata(domain)
 
+      if (!metadata.verified) {
+        setFeedback({
+          type: 'error',
+          message:
+            "This domain couldn't be verified. Please enter a valid, reachable website domain.",
+        })
+        return
+      }
+
       await submitBid({
         domain,
         name: metadata.name,

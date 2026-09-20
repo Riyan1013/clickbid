@@ -10,7 +10,6 @@ const NAV_LINKS = [
   { label: 'Leaderboard', href: '/' },
   { label: 'Categories', href: '/categories' },
   { label: 'Rules', href: '/rules' },
-  { label: 'About', href: '/about' },
 ]
 
 /**
@@ -114,7 +113,7 @@ export function Header({ visitorsToday = 0 }: { visitorsToday?: number }) {
         onClick={() => setIsMenuOpen(false)}
         className="flex shrink-0 items-center"
       >
-        <div className="relative h-12 w-[160px] shrink-0">
+        <div className="relative h-12 w-[120px] shrink-0 sm:w-[160px]">
           <img
             src="/clickbid-logo.svg"
             alt="ClickBid"
@@ -236,16 +235,24 @@ export function Header({ visitorsToday = 0 }: { visitorsToday?: number }) {
             </span>
           </div>
 
-          {/* Divider */}
-          <span aria-hidden="true" className="h-3 w-px bg-border" />
+          {/* Divider — visible only when the Today metric is shown */}
+          <span
+            aria-hidden="true"
+            className="hidden h-3 w-px bg-border sm:inline-block"
+          />
+
+          {/* Divider — Statistics only appears in this pill from sm upward */}
+          <span
+            aria-hidden="true"
+            className="hidden h-3 w-px bg-border sm:inline-block"
+          />
 
           {/* Statistics */}
           <Link
             href="/stats"
-            className="text-[9px] font-semibold uppercase tracking-[0.08em] text-muted transition-colors duration-150 hover:text-primary"
+            className="hidden text-[9px] font-semibold uppercase tracking-[0.08em] text-muted transition-colors duration-150 hover:text-primary sm:inline"
           >
-            <span className="sm:hidden">Stats</span>
-            <span className="hidden sm:inline">Statistics</span>
+            Statistics
           </Link>
         </div>
 
@@ -284,6 +291,13 @@ export function Header({ visitorsToday = 0 }: { visitorsToday?: number }) {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/stats"
+              onClick={() => setIsMenuOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-secondary transition-colors duration-150 hover:bg-inset hover:text-primary sm:hidden"
+            >
+              Statistics
+            </Link>
           </nav>
         </div>
       )}
